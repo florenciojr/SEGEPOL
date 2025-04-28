@@ -112,4 +112,14 @@ public class Usuario {
     public void setTelefone(String telefone) {
         this.telefone = telefone;
     }
+    private String numeroIdentificacao; // Novo campo
+
+public String getNumeroIdentificacao() {
+    return numeroIdentificacao;
+}
+
+public void setNumeroIdentificacao(String numeroIdentificacao) {
+    this.numeroIdentificacao = numeroIdentificacao;
+}
+
 }

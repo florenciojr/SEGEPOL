@@ -23,17 +23,19 @@ public class UsuarioDAO {
 
     // Método para inserir um novo usuário
     public void inserirUsuario(Usuario usuario) {
-        String sql = "INSERT INTO usuarios (nome, email, senha, perfil, estado, telefone) VALUES (?, ?, ?, ?, ?, ?)";
+       String sql = "INSERT INTO usuarios (nome, email, senha, perfil, estado, telefone, numero_identificacao) VALUES (?, ?, ?, ?, ?, ?, ?)";
 
         try (Connection conn = Conexao.conectar();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setString(1, usuario.getNome());
-            stmt.setString(2, usuario.getEmail());
-            stmt.setString(3, usuario.getSenha());
-            stmt.setString(4, usuario.getPerfil());
-            stmt.setString(5, usuario.getEstado());
-            stmt.setString(6, usuario.getContacto());
+stmt.setString(2, usuario.getEmail());
+stmt.setString(3, usuario.getSenha());
+stmt.setString(4, usuario.getPerfil());
+stmt.setString(5, usuario.getEstado());
+stmt.setString(6, usuario.getContacto());
+stmt.setString(7, usuario.getNumeroIdentificacao()); 
+
 
             stmt.executeUpdate();
             System.out.println("Usuário inserido com sucesso!");
@@ -61,6 +63,8 @@ public class UsuarioDAO {
                 usuario.setPerfil(rs.getString("perfil"));
                 usuario.setEstado(rs.getString("estado"));
                 usuario.setContacto(rs.getString("telefone"));
+                usuario.setNumeroIdentificacao(rs.getString("numero_identificacao")); // Novo
+
                 lista.add(usuario);
             }
 
@@ -70,6 +74,40 @@ public class UsuarioDAO {
 
         return lista;
     }
+    
+    
+    // Método para buscar usuário por número de identificação
+public Usuario buscarUsuarioPorNumeroIdentificacao(String numeroIdentificacao) {
+    Usuario usuario = null;
+    String sql = "SELECT * FROM usuarios WHERE numero_identificacao = ?";
+
+    try (Connection conn = Conexao.conectar();
+         PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+        stmt.setString(1, numeroIdentificacao);
+
+        try (ResultSet rs = stmt.executeQuery()) {
+            if (rs.next()) {
+                usuario = new Usuario();
+                usuario.setId_usuario(rs.getInt("id_usuario"));
+                usuario.setNome(rs.getString("nome"));
+                usuario.setEmail(rs.getString("email"));
+                usuario.setSenha(rs.getString("senha"));
+                usuario.setPerfil(rs.getString("perfil"));
+                usuario.setEstado(rs.getString("estado"));
+                usuario.setContacto(rs.getString("telefone"));
+                usuario.setNumeroIdentificacao(rs.getString("numero_identificacao"));
+            }
+        }
+
+    } catch (SQLException e) {
+        System.out.println("Erro ao buscar usuário por número de identificação: " + e.getMessage());
+    }
+
+    return usuario;
+}
+
+    
 
     // Método para buscar um usuário por ID
     public Usuario buscarUsuarioPorId(int id) {
@@ -85,12 +123,15 @@ public class UsuarioDAO {
                 if (rs.next()) {
                     usuario = new Usuario();
                     usuario.setId_usuario(rs.getInt("id_usuario"));
+                    usuario.setNumeroIdentificacao(rs.getString("numero_identificacao")); // Novo
+
                     usuario.setNome(rs.getString("nome"));
                     usuario.setEmail(rs.getString("email"));
                     usuario.setSenha(rs.getString("senha"));
                     usuario.setPerfil(rs.getString("perfil"));
                     usuario.setEstado(rs.getString("estado"));
                     usuario.setContacto(rs.getString("telefone"));
+                    
                 }
             }
 
@@ -103,18 +144,20 @@ public class UsuarioDAO {
 
     // Método para atualizar um usuário
     public void atualizarUsuario(Usuario usuario) {
-        String sql = "UPDATE usuarios SET nome = ?, email = ?, senha = ?, perfil = ?, estado = ?, telefone = ? WHERE id_usuario = ?";
+        String sql = "UPDATE usuarios SET nome = ?, email = ?, senha = ?, perfil = ?, estado = ?, telefone = ?, numero_identificacao = ? WHERE id_usuario = ?";
 
         try (Connection conn = Conexao.conectar();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
+            
 
-            stmt.setString(1, usuario.getNome());
-            stmt.setString(2, usuario.getEmail());
-            stmt.setString(3, usuario.getSenha());
-            stmt.setString(4, usuario.getPerfil());
-            stmt.setString(5, usuario.getEstado());
-            stmt.setString(6, usuario.getContacto());
-            stmt.setInt(7, usuario.getId_usuario());
+stmt.setString(1, usuario.getNome());
+stmt.setString(2, usuario.getEmail());
+stmt.setString(3, usuario.getSenha());
+stmt.setString(4, usuario.getPerfil());
+stmt.setString(5, usuario.getEstado());
+stmt.setString(6, usuario.getContacto());
+stmt.setString(7, usuario.getNumeroIdentificacao()); // Novo
+stmt.setInt(8, usuario.getId_usuario());
 
             stmt.executeUpdate();
             System.out.println("Usuário atualizado com sucesso!");
@@ -152,6 +195,7 @@ public class UsuarioDAO {
         System.out.println("3. Buscar usuário por ID");
         System.out.println("4. Atualizar usuário");
         System.out.println("5. Deletar usuário");
+        System.out.println("6. Buscar usuário por número de identificação");
         System.out.println("0. Sair");
         System.out.print("Escolha uma opção: ");
         opcao = sc.nextInt();
@@ -160,6 +204,9 @@ public class UsuarioDAO {
         switch (opcao) {
             case 1:
                 Usuario novoUsuario = new Usuario();
+                System.out.print("Número de Identificação: ");
+novoUsuario.setNumeroIdentificacao(sc.nextLine());
+
                 System.out.print("Nome: ");
                 novoUsuario.setNome(sc.nextLine());
                 System.out.print("Email: ");
@@ -212,6 +259,9 @@ public class UsuarioDAO {
                 if (usuarioAtualizar != null) {
                     System.out.print("Novo nome (" + usuarioAtualizar.getNome() + "): ");
                     usuarioAtualizar.setNome(sc.nextLine());
+                    System.out.print("Novo número de identificação (" + usuarioAtualizar.getNumeroIdentificacao() + "): ");
+usuarioAtualizar.setNumeroIdentificacao(sc.nextLine());
+
                     System.out.print("Novo email (" + usuarioAtualizar.getEmail() + "): ");
                     usuarioAtualizar.setEmail(sc.nextLine());
                     System.out.print("Nova senha: ");
@@ -228,7 +278,27 @@ public class UsuarioDAO {
                     System.out.println("Usuário não encontrado.");
                 }
                 break;
+                
+                
+                case 6:
+    System.out.print("Número de Identificação do usuário: ");
+    String numeroIdentificacaoBusca = sc.nextLine();
+    Usuario usuarioPorNumero = dao.buscarUsuarioPorNumeroIdentificacao(numeroIdentificacaoBusca);
+    if (usuarioPorNumero != null) {
+        System.out.println("ID: " + usuarioPorNumero.getId_usuario());
+        System.out.println("Nome: " + usuarioPorNumero.getNome());
+        System.out.println("Email: " + usuarioPorNumero.getEmail());
+        System.out.println("Perfil: " + usuarioPorNumero.getPerfil());
+        System.out.println("Estado: " + usuarioPorNumero.getEstado());
+        System.out.println("Contacto: " + usuarioPorNumero.getContacto());
+        System.out.println("Número de Identificação: " + usuarioPorNumero.getNumeroIdentificacao());
+    } else {
+        System.out.println("Usuário não encontrado.");
+    }
+    break;
 
+                
+                
             case 5:
                 System.out.print("ID do usuário para deletar: ");
                 int idDeletar = sc.nextInt();
@@ -250,3 +320,4 @@ public class UsuarioDAO {
 }
 
 }
+// USAR NO FINAL OS MAIN PARA CRIAR OS SERVLETS
