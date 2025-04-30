@@ -1,0 +1,16 @@
+﻿✅CHECKLIST DE DAOs – Projeto SIGEPOL
+
+
+[✅] UsuarioDAO – acesso aos dados dos usuários do sistema  
+[✅] CidadaoDAO – informações dos cidadãos (denunciantes ou suspeitos)  
+[✅] QueixaDAO – registro e gerenciamento das queixas  
+[✅] TipoQueixaDAO – categorias de queixa (ex: furto, roubo, etc.)  
+[✅] VitimaDAO – dados das vítimas associadas às queixas  
+[✅] SuspeitoDAO – informações dos suspeitos relacionados às queixas  
+[✅] AndamentoQueixaDAO – progresso da queixa (etapas, observações)  
+[ ] AtribuicaoDAO – atribuição de queixas aos agentes/responsáveis  
+[ ] ProvaDAO – registro de provas materiais e testemunhais  
+[ ] MandadoPrisaoDAO – mandados emitidos durante a investigação  
+[ ] VeiculoRoubadoDAO – cadastro de veículos associados a crimes  
+[ ] PatrulhaDAO – registro de patrulhas realizadas  
+[ ] LoginDAO – histórico de logins dos usuários (opcional)
