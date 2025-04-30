@@ -10,37 +10,36 @@ package model;
  */
 
 
+import java.sql.Timestamp;
+
 public class Usuario {
     private int id_usuario;
     private String nome;
     private String email;
     private String senha;
+    private String cargo;  // Agente, Investigador, Comandante, Administrador
+    private String contacto;
+    private String foto_perfil;
+    private String status;  // Ativo, Inativo
+    private Timestamp data_cadastro;
     private String perfil;
     private String estado;
-    private String contacto; // se quiser, pode usar 'telefone' no lugar de 'contacto'
-    private String foto;
-
-    private String telefone; // <-- Adicionei aqui!
+    private String numero_identificacao;
 
     // Construtor vazio
     public Usuario() {
     }
 
-    // Construtor completo
-    public Usuario(int id_usuario, String nome, String email, String senha, String perfil, String estado, String contacto, String foto, String telefone) {
-        this.id_usuario = id_usuario;
+    // Construtor com campos básicos
+    public Usuario(String nome, String email, String senha, String cargo) {
         this.nome = nome;
         this.email = email;
         this.senha = senha;
-        this.perfil = perfil;
-        this.estado = estado;
-        this.contacto = contacto;
-        this.foto = foto;
-        this.telefone = telefone; // <-- Adicionei aqui
+        this.cargo = cargo;
+        this.status = "Ativo"; // Valor padrão
     }
 
     // Getters e Setters
-
     public int getId_usuario() {
         return id_usuario;
     }
@@ -73,6 +72,46 @@ public class Usuario {
         this.senha = senha;
     }
 
+    public String getCargo() {
+        return cargo;
+    }
+
+    public void setCargo(String cargo) {
+        this.cargo = cargo;
+    }
+
+    public String getContacto() {
+        return contacto;
+    }
+
+    public void setContacto(String contacto) {
+        this.contacto = contacto;
+    }
+
+    public String getFoto_perfil() {
+        return foto_perfil;
+    }
+
+    public void setFoto_perfil(String foto_perfil) {
+        this.foto_perfil = foto_perfil;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
+    public Timestamp getData_cadastro() {
+        return data_cadastro;
+    }
+
+    public void setData_cadastro(Timestamp data_cadastro) {
+        this.data_cadastro = data_cadastro;
+    }
+
     public String getPerfil() {
         return perfil;
     }
@@ -89,37 +128,24 @@ public class Usuario {
         this.estado = estado;
     }
 
-    public String getContacto() {
-        return contacto;
+    public String getNumero_identificacao() {
+        return numero_identificacao;
     }
 
-    public void setContacto(String contacto) {
-        this.contacto = contacto;
+    public void setNumero_identificacao(String numero_identificacao) {
+        this.numero_identificacao = numero_identificacao;
     }
 
-    public String getFoto() {
-        return foto;
+    // Método toString para representação em string do objeto
+    @Override
+    public String toString() {
+        return "Usuario{" +
+                "id_usuario=" + id_usuario +
+                ", nome='" + nome + '\'' +
+                ", email='" + email + '\'' +
+                ", cargo='" + cargo + '\'' +
+                ", status='" + status + '\'' +
+                ", data_cadastro=" + data_cadastro +
+                '}';
     }
-
-    public void setFoto(String foto) {
-        this.foto = foto;
-    }
-
-    public String getTelefone() {
-        return telefone;
-    }
-
-    public void setTelefone(String telefone) {
-        this.telefone = telefone;
-    }
-    private String numeroIdentificacao; // Novo campo
-
-public String getNumeroIdentificacao() {
-    return numeroIdentificacao;
-}
-
-public void setNumeroIdentificacao(String numeroIdentificacao) {
-    this.numeroIdentificacao = numeroIdentificacao;
-}
-
 }
