@@ -9,32 +9,26 @@ package model;
  * @author JR5
  */
 
+
 public class Suspeito {
-    private int idSuspeito;
+
+    private Integer idSuspeito;
     private int idQueixa;
     private String nome;
     private String descricao;
     private String genero;
     private String dataNascimento;
+    private Integer idCidadao; // Pode ser null se ainda não estiver vinculado
 
-    // Construtores
-    public Suspeito() {}
-
-    public Suspeito(int idSuspeito, int idQueixa, String nome, String descricao, String genero, String dataNascimento) {
-        this.idSuspeito = idSuspeito;
-        this.idQueixa = idQueixa;
-        this.nome = nome;
-        this.descricao = descricao;
-        this.genero = genero;
-        this.dataNascimento = dataNascimento;
+    public Suspeito() {
+        // Construtor padrão
     }
 
-    // Getters e Setters
-    public int getIdSuspeito() {
+    public Integer getIdSuspeito() {
         return idSuspeito;
     }
 
-    public void setIdSuspeito(int idSuspeito) {
+    public void setIdSuspeito(Integer idSuspeito) {
         this.idSuspeito = idSuspeito;
     }
 
@@ -47,7 +41,7 @@ public class Suspeito {
     }
 
     public String getNome() {
-        return nome;
+        return nome != null ? nome : "";
     }
 
     public void setNome(String nome) {
@@ -55,7 +49,7 @@ public class Suspeito {
     }
 
     public String getDescricao() {
-        return descricao;
+        return descricao != null ? descricao : "";
     }
 
     public void setDescricao(String descricao) {
@@ -63,7 +57,7 @@ public class Suspeito {
     }
 
     public String getGenero() {
-        return genero;
+        return genero != null ? genero : "";
     }
 
     public void setGenero(String genero) {
@@ -71,18 +65,31 @@ public class Suspeito {
     }
 
     public String getDataNascimento() {
-        return dataNascimento;
+        return dataNascimento != null ? dataNascimento : "";
     }
 
     public void setDataNascimento(String dataNascimento) {
         this.dataNascimento = dataNascimento;
     }
 
+    public Integer getIdCidadao() {
+        return idCidadao;
+    }
+
+    public void setIdCidadao(Integer idCidadao) {
+        this.idCidadao = idCidadao;
+    }
+
     @Override
     public String toString() {
-        return "Suspeito [idSuspeito=" + idSuspeito + ", idQueixa=" + idQueixa +
-               ", nome=" + nome + ", descricao=" + descricao +
-               ", genero=" + genero + ", dataNascimento=" + dataNascimento + "]";
+        return "Suspeito {" +
+                "ID = " + idSuspeito +
+                ", Queixa = " + idQueixa +
+                ", Nome = '" + nome + '\'' +
+                ", Descrição = '" + descricao + '\'' +
+                ", Gênero = '" + genero + '\'' +
+                ", Data de Nascimento = '" + dataNascimento + '\'' +
+                ", ID Cidadão = " + (idCidadao != null ? idCidadao : "N/A") +
+                '}';
     }
 }
-
