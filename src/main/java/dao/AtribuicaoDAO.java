@@ -264,29 +264,29 @@ public class AtribuicaoDAO {
     }
 
     private static void listarAtribuicoes(AtribuicaoDAO dao) {
-        System.out.println("\n--- LISTA DE ATRIBUIÇÕES ---");
-        try {
-            List<Atribuicao> lista = dao.listarTodos();
+    System.out.println("\n--- LISTA DE ATRIBUIÇÕES ---");
+    try {
+        List<Atribuicao> lista = dao.listarTodos();
+        
+        if (lista.isEmpty()) {
+            System.out.println("Nenhuma atribuição cadastrada.");
+        } else {
+            System.out.printf("%-5s %-10s %-20s %-15s\n", 
+                "ID", "ID Queixa", "Investigador", "Data");
+            System.out.println("----------------------------------------------------");
             
-            if (lista.isEmpty()) {
-                System.out.println("Nenhuma atribuição cadastrada.");
-            } else {
-                System.out.printf("%-5s %-10s %-15s %-20s %-20s%n", 
-                    "ID", "ID Queixa", "Investigador", "Data Atribuição");
-                System.out.println("------------------------------------------------------------");
-                
-                for (Atribuicao a : lista) {
-                    System.out.printf("%-5d %-10d %-15s %-20s%n",
-                        a.getIdAtribuicao(),
-                        a.getIdQueixa(),
-                        a.getNomeInvestigador(),
-                        new java.text.SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(a.getDataAtribuicao()));
-                }
+            for (Atribuicao a : lista) {
+                System.out.printf("%-5d %-10d %-20s %-15s\n",
+                    a.getIdAtribuicao(),
+                    a.getIdQueixa(),
+                    a.getNomeInvestigador(),
+                    new java.text.SimpleDateFormat("dd/MM/yyyy").format(a.getDataAtribuicao()));
             }
-        } catch (Exception e) {
-            System.out.println("Erro ao listar: " + e.getMessage());
         }
+    } catch (Exception e) {
+        System.out.println("Erro ao listar: " + e.getMessage());
     }
+}
 
     private static void buscarAtribuicao(AtribuicaoDAO dao, Scanner scanner) {
         System.out.println("\n--- BUSCAR ATRIBUIÇÃO ---");
