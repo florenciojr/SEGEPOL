@@ -10,25 +10,30 @@ package model;
  */
 
 
-public class Suspeito {
+import java.util.Date;
 
-    private Integer idSuspeito;
+public class Suspeito {
+    private int idSuspeito;
     private int idQueixa;
     private String nome;
     private String descricao;
     private String genero;
     private String dataNascimento;
-    private Integer idCidadao; // Pode ser null se ainda não estiver vinculado
+    private Integer idCidadao;
+    private String caminhoImagem;
+    private Date dataRegistro;
 
+    // Construtores
     public Suspeito() {
-        // Construtor padrão
+        this.dataRegistro = new Date();
     }
 
-    public Integer getIdSuspeito() {
+    // Getters e Setters
+    public int getIdSuspeito() {
         return idSuspeito;
     }
 
-    public void setIdSuspeito(Integer idSuspeito) {
+    public void setIdSuspeito(int idSuspeito) {
         this.idSuspeito = idSuspeito;
     }
 
@@ -41,7 +46,7 @@ public class Suspeito {
     }
 
     public String getNome() {
-        return nome != null ? nome : "";
+        return nome;
     }
 
     public void setNome(String nome) {
@@ -49,7 +54,7 @@ public class Suspeito {
     }
 
     public String getDescricao() {
-        return descricao != null ? descricao : "";
+        return descricao;
     }
 
     public void setDescricao(String descricao) {
@@ -57,7 +62,7 @@ public class Suspeito {
     }
 
     public String getGenero() {
-        return genero != null ? genero : "";
+        return genero;
     }
 
     public void setGenero(String genero) {
@@ -65,7 +70,7 @@ public class Suspeito {
     }
 
     public String getDataNascimento() {
-        return dataNascimento != null ? dataNascimento : "";
+        return dataNascimento;
     }
 
     public void setDataNascimento(String dataNascimento) {
@@ -80,16 +85,27 @@ public class Suspeito {
         this.idCidadao = idCidadao;
     }
 
+    public String getCaminhoImagem() {
+        return caminhoImagem;
+    }
+
+    public void setCaminhoImagem(String caminhoImagem) {
+        this.caminhoImagem = caminhoImagem;
+    }
+
+    public Date getDataRegistro() {
+        return dataRegistro;
+    }
+
+    public void setDataRegistro(Date dataRegistro) {
+        this.dataRegistro = dataRegistro;
+    }
+
     @Override
     public String toString() {
-        return "Suspeito {" +
-                "ID = " + idSuspeito +
-                ", Queixa = " + idQueixa +
-                ", Nome = '" + nome + '\'' +
-                ", Descrição = '" + descricao + '\'' +
-                ", Gênero = '" + genero + '\'' +
-                ", Data de Nascimento = '" + dataNascimento + '\'' +
-                ", ID Cidadão = " + (idCidadao != null ? idCidadao : "N/A") +
-                '}';
+        return String.format("Suspeito [ID=%d, Queixa=%d, Nome=%s, Gênero=%s, Nascimento=%s, Cidadão=%s, Imagem=%s]",
+                idSuspeito, idQueixa, nome, genero, dataNascimento, 
+                idCidadao != null ? idCidadao : "N/A",
+                caminhoImagem != null ? caminhoImagem.substring(caminhoImagem.lastIndexOf("\\") + 1) : "Nenhuma");
     }
 }
