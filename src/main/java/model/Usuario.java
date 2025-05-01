@@ -3,15 +3,24 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
 package model;
+import java.sql.Timestamp;
 
 /**
  *
  * @author JR5
  */
 
+/*
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
+ */
 
-import java.sql.Timestamp;
 
+
+/**
+ *
+ * @author JR5
+ */
 public class Usuario {
     private int id_usuario;
     private String nome;
@@ -20,23 +29,38 @@ public class Usuario {
     private String cargo;  // Agente, Investigador, Comandante, Administrador
     private String contacto;
     private String foto_perfil;
-    private String status;  // Ativo, Inativo
+    private String status;  // Ativo, Inativo, Suspenso, Férias
     private Timestamp data_cadastro;
-    private String perfil;
-    private String estado;
+    private Timestamp data_atualizacao;
+    private String perfil;  // Operacional, Tático, Estratégico, Administrativo
+    private String estado;  // UF do estado
     private String numero_identificacao;
 
     // Construtor vazio
     public Usuario() {
+        this.status = "Ativo"; // Valor padrão
+        this.data_cadastro = new Timestamp(System.currentTimeMillis());
     }
 
     // Construtor com campos básicos
     public Usuario(String nome, String email, String senha, String cargo) {
+        this();
         this.nome = nome;
         this.email = email;
         this.senha = senha;
         this.cargo = cargo;
-        this.status = "Ativo"; // Valor padrão
+    }
+    
+    // Construtor completo (opcional)
+    public Usuario(String nome, String email, String senha, String cargo, 
+                  String contacto, String status, String perfil, String estado, 
+                  String numeroIdentificacao) {
+        this(nome, email, senha, cargo);
+        this.contacto = contacto;
+        this.status = status;
+        this.perfil = perfil;
+        this.estado = estado;
+        this.numero_identificacao = numeroIdentificacao;
     }
 
     // Getters e Setters
@@ -112,6 +136,14 @@ public class Usuario {
         this.data_cadastro = data_cadastro;
     }
 
+    public Timestamp getData_atualizacao() {
+        return data_atualizacao;
+    }
+
+    public void setData_atualizacao(Timestamp data_atualizacao) {
+        this.data_atualizacao = data_atualizacao;
+    }
+
     public String getPerfil() {
         return perfil;
     }
@@ -136,16 +168,24 @@ public class Usuario {
         this.numero_identificacao = numero_identificacao;
     }
 
-    // Método toString para representação em string do objeto
+    // Método toString melhorado
     @Override
     public String toString() {
         return "Usuario{" +
-                "id_usuario=" + id_usuario +
+                "id=" + id_usuario +
                 ", nome='" + nome + '\'' +
                 ", email='" + email + '\'' +
                 ", cargo='" + cargo + '\'' +
                 ", status='" + status + '\'' +
-                ", data_cadastro=" + data_cadastro +
+                ", perfil='" + perfil + '\'' +
+                ", numId='" + numero_identificacao + '\'' +
+                ", cadastro=" + data_cadastro +
+                (data_atualizacao != null ? ", atualizacao=" + data_atualizacao : "") +
                 '}';
+    }
+
+    // Método para verificar se o usuário está ativo
+    public boolean isAtivo() {
+        return "Ativo".equalsIgnoreCase(this.status);
     }
 }
