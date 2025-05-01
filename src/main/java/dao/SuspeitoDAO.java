@@ -40,49 +40,56 @@ public class SuspeitoDAO {
         }
     }
 
-    private String copiarImagemParaUpload(String caminhoOriginal) throws IOException {
-        File arquivoOriginal = new File(caminhoOriginal);
-        if (!arquivoOriginal.exists()) {
-            throw new IOException("Arquivo não encontrado: " + caminhoOriginal);
-        }
-
-        String nomeArquivo = arquivoOriginal.getName();
-        File destino = new File(DIRETORIO_UPLOAD + nomeArquivo);
-        
-        int counter = 1;
-        while (destino.exists()) {
-            int dotIndex = nomeArquivo.lastIndexOf('.');
-            String nomeSemExt = dotIndex > 0 ? nomeArquivo.substring(0, dotIndex) : nomeArquivo;
-            String ext = dotIndex > 0 ? nomeArquivo.substring(dotIndex) : "";
-            destino = new File(DIRETORIO_UPLOAD + nomeSemExt + "_" + counter + ext);
-            counter++;
-        }
-        
-        Files.copy(arquivoOriginal.toPath(), destino.toPath(), StandardCopyOption.REPLACE_EXISTING);
-        return destino.getAbsolutePath();
+private String copiarImagemParaUpload(String caminhoOriginal, String nomeSuspeito) throws IOException {
+    File arquivoOriginal = new File(caminhoOriginal);
+    if (!arquivoOriginal.exists()) {
+        throw new IOException("Arquivo não encontrado: " + caminhoOriginal);
     }
 
-    private String selecionarImagem(Scanner scanner) {
-        System.out.println("\n--- INSTRUÇÕES PARA IMAGEM ---");
-        System.out.println("1. Digite o caminho completo (ex: C:\\pasta\\foto.jpg)");
-        System.out.println("2. OU arraste o arquivo para este terminal");
-        System.out.println("3. Formatos aceitos: JPG, PNG");
-        System.out.println("0. Cancelar e não adicionar imagem");
-        System.out.print("\nInforme o caminho ou 0 para cancelar: ");
-        
-        String caminho = scanner.nextLine().trim().replace("\"", "");
-        
-        if (caminho.equals("0")) {
-            return null;
-        }
-        
-        try {
-            return copiarImagemParaUpload(caminho);
-        } catch (IOException e) {
-            System.err.println("Erro ao processar imagem: " + e.getMessage());
-            return null;
-        }
+    // Obter extensão do arquivo original
+    String nomeArquivo = arquivoOriginal.getName();
+    int dotIndex = nomeArquivo.lastIndexOf('.');
+    String extensao = dotIndex > 0 ? nomeArquivo.substring(dotIndex) : "";
+    
+    // Criar nome do arquivo usando o nome do suspeito (sanitizado)
+    String nomeBase = nomeSuspeito.replaceAll("[^a-zA-Z0-9]", "_"); // Substitui caracteres especiais
+    String novoNome = nomeBase + extensao;
+    
+    File destino = new File(DIRETORIO_UPLOAD + novoNome);
+    
+    // Evitar sobrescrita adicionando número sequencial se necessário
+    int counter = 1;
+    while (destino.exists()) {
+        novoNome = nomeBase + "_" + counter + extensao;
+        destino = new File(DIRETORIO_UPLOAD + novoNome);
+        counter++;
     }
+    
+    Files.copy(arquivoOriginal.toPath(), destino.toPath(), StandardCopyOption.REPLACE_EXISTING);
+    return destino.getAbsolutePath();
+}
+
+   private String selecionarImagem(Scanner scanner, String nomeSuspeito) {
+    System.out.println("\n--- INSTRUÇÕES PARA IMAGEM ---");
+    System.out.println("1. Digite o caminho completo (ex: C:\\pasta\\foto.jpg)");
+    System.out.println("2. OU arraste o arquivo para este terminal");
+    System.out.println("3. Formatos aceitos: JPG, PNG");
+    System.out.println("0. Cancelar e não adicionar imagem");
+    System.out.print("\nInforme o caminho ou 0 para cancelar: ");
+    
+    String caminho = scanner.nextLine().trim().replace("\"", "");
+    
+    if (caminho.equals("0")) {
+        return null;
+    }
+    
+    try {
+        return copiarImagemParaUpload(caminho, nomeSuspeito);
+    } catch (IOException e) {
+        System.err.println("Erro ao processar imagem: " + e.getMessage());
+        return null;
+    }
+}
 
     public boolean existeCidadao(int idCidadao) {
         String sql = "SELECT 1 FROM cidadaos WHERE id_cidadao = ?";
@@ -329,47 +336,48 @@ public class SuspeitoDAO {
         }
     }
 
-    private static void inserirSuspeito(SuspeitoDAO dao, Scanner scanner) {
-        System.out.println("\n--- NOVO SUSPEITO ---");
+ private static void inserirSuspeito(SuspeitoDAO dao, Scanner scanner) {
+    System.out.println("\n--- NOVO SUSPEITO ---");
+    
+    try {
+        Suspeito novo = new Suspeito();
         
-        try {
-            Suspeito novo = new Suspeito();
-            
-            System.out.print("ID da Queixa: ");
-            novo.setIdQueixa(Integer.parseInt(scanner.nextLine()));
-            
-            System.out.print("Nome: ");
-            novo.setNome(scanner.nextLine());
-            
-            System.out.print("Descrição: ");
-            novo.setDescricao(scanner.nextLine());
-            
-            System.out.print("Gênero (M/F/Outro): ");
-            novo.setGenero(scanner.nextLine());
-            
-            System.out.print("Data de Nascimento (AAAA-MM-DD): ");
-            novo.setDataNascimento(scanner.nextLine());
-            
-            System.out.print("ID do Cidadão: ");
-            novo.setIdCidadao(Integer.parseInt(scanner.nextLine()));
-            
-            System.out.println("\nDeseja adicionar uma imagem do suspeito? (S/N)");
-            if (scanner.nextLine().equalsIgnoreCase("S")) {
-                String caminhoImagem = dao.selecionarImagem(scanner);
-                novo.setCaminhoImagem(caminhoImagem);
-            }
-            
-            if (dao.inserir(novo)) {
-                System.out.println("Suspeito cadastrado com sucesso! ID: " + novo.getIdSuspeito());
-            } else {
-                System.out.println("Falha ao cadastrar suspeito.");
-            }
-        } catch (NumberFormatException e) {
-            System.out.println("Erro: Valor numérico inválido!");
-        } catch (Exception e) {
-            System.out.println("Erro: " + e.getMessage());
+        System.out.print("ID da Queixa: ");
+        novo.setIdQueixa(Integer.parseInt(scanner.nextLine()));
+        
+        System.out.print("Nome: ");
+        String nomeSuspeito = scanner.nextLine();
+        novo.setNome(nomeSuspeito);
+        
+        System.out.print("Descrição: ");
+        novo.setDescricao(scanner.nextLine());
+        
+        System.out.print("Gênero (M/F/Outro): ");
+        novo.setGenero(scanner.nextLine());
+        
+        System.out.print("Data de Nascimento (AAAA-MM-DD): ");
+        novo.setDataNascimento(scanner.nextLine());
+        
+        System.out.print("ID do Cidadão: ");
+        novo.setIdCidadao(Integer.parseInt(scanner.nextLine()));
+        
+        System.out.println("\nDeseja adicionar uma imagem do suspeito? (S/N)");
+        if (scanner.nextLine().equalsIgnoreCase("S")) {
+            String caminhoImagem = dao.selecionarImagem(scanner, nomeSuspeito);
+            novo.setCaminhoImagem(caminhoImagem);
         }
+        
+        if (dao.inserir(novo)) {
+            System.out.println("Suspeito cadastrado com sucesso! ID: " + novo.getIdSuspeito());
+        } else {
+            System.out.println("Falha ao cadastrar suspeito.");
+        }
+    } catch (NumberFormatException e) {
+        System.out.println("Erro: Valor numérico inválido!");
+    } catch (Exception e) {
+        System.out.println("Erro: " + e.getMessage());
     }
+}
 
     private static void listarSuspeitos(SuspeitoDAO dao) {
         System.out.println("\n--- LISTA DE SUSPEITOS ---");
@@ -428,55 +436,56 @@ public class SuspeitoDAO {
         }
     }
 
-    private static void atualizarSuspeito(SuspeitoDAO dao, Scanner scanner) {
-        System.out.println("\n--- ATUALIZAR SUSPEITO ---");
-        System.out.print("ID do Suspeito: ");
+private static void atualizarSuspeito(SuspeitoDAO dao, Scanner scanner) {
+    System.out.println("\n--- ATUALIZAR SUSPEITO ---");
+    System.out.print("ID do Suspeito: ");
+    
+    try {
+        int id = Integer.parseInt(scanner.nextLine());
+        Suspeito s = dao.buscarPorId(id);
         
-        try {
-            int id = Integer.parseInt(scanner.nextLine());
-            Suspeito s = dao.buscarPorId(id);
-            
-            if (s == null) {
-                System.out.println("Suspeito não encontrado!");
-                return;
-            }
-            
-            System.out.println("\nDados atuais:");
-            System.out.println(s);
-            
-            System.out.print("\nNovo ID da Queixa (" + s.getIdQueixa() + "): ");
-            s.setIdQueixa(Integer.parseInt(scanner.nextLine()));
-            
-            System.out.print("Novo Nome (" + s.getNome() + "): ");
-            s.setNome(scanner.nextLine());
-            
-            System.out.print("Nova Descrição (" + s.getDescricao() + "): ");
-            s.setDescricao(scanner.nextLine());
-            
-            System.out.print("Novo Gênero (" + s.getGenero() + "): ");
-            s.setGenero(scanner.nextLine());
-            
-            System.out.print("Nova Data Nascimento (" + s.getDataNascimento() + "): ");
-            s.setDataNascimento(scanner.nextLine());
-            
-            System.out.print("Novo ID Cidadão (" + s.getIdCidadao() + "): ");
-            s.setIdCidadao(Integer.parseInt(scanner.nextLine()));
-            
-            System.out.print("Deseja alterar a imagem? (S/N): ");
-            if (scanner.nextLine().equalsIgnoreCase("S")) {
-                String novaImagem = dao.selecionarImagem(scanner);
-                s.setCaminhoImagem(novaImagem);
-            }
-            
-            if (dao.atualizar(s)) {
-                System.out.println("Suspeito atualizado com sucesso!");
-            } else {
-                System.out.println("Falha ao atualizar suspeito!");
-            }
-        } catch (NumberFormatException e) {
-            System.out.println("Erro: Valor numérico inválido!");
+        if (s == null) {
+            System.out.println("Suspeito não encontrado!");
+            return;
         }
+        
+        System.out.println("\nDados atuais:");
+        System.out.println(s);
+        
+        System.out.print("\nNovo ID da Queixa (" + s.getIdQueixa() + "): ");
+        s.setIdQueixa(Integer.parseInt(scanner.nextLine()));
+        
+        System.out.print("Novo Nome (" + s.getNome() + "): ");
+        String novoNome = scanner.nextLine();
+        s.setNome(novoNome);
+        
+        System.out.print("Nova Descrição (" + s.getDescricao() + "): ");
+        s.setDescricao(scanner.nextLine());
+        
+        System.out.print("Novo Gênero (" + s.getGenero() + "): ");
+        s.setGenero(scanner.nextLine());
+        
+        System.out.print("Nova Data Nascimento (" + s.getDataNascimento() + "): ");
+        s.setDataNascimento(scanner.nextLine());
+        
+        System.out.print("Novo ID Cidadão (" + s.getIdCidadao() + "): ");
+        s.setIdCidadao(Integer.parseInt(scanner.nextLine()));
+        
+        System.out.print("Deseja alterar a imagem? (S/N): ");
+        if (scanner.nextLine().equalsIgnoreCase("S")) {
+            String novaImagem = dao.selecionarImagem(scanner, novoNome);
+            s.setCaminhoImagem(novaImagem);
+        }
+        
+        if (dao.atualizar(s)) {
+            System.out.println("Suspeito atualizado com sucesso!");
+        } else {
+            System.out.println("Falha ao atualizar suspeito!");
+        }
+    } catch (NumberFormatException e) {
+        System.out.println("Erro: Valor numérico inválido!");
     }
+}
 
     private static void removerSuspeito(SuspeitoDAO dao, Scanner scanner) {
         System.out.println("\n--- REMOVER SUSPEITO ---");
