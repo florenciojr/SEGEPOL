@@ -1,7 +1,7 @@
 ﻿✅CHECKLIST DE DAOs – Projeto SIGEPOL
 
 
-[] UsuarioDAO – acesso aos dados dos usuários do sistema  
+[✅] UsuarioDAO – acesso aos dados dos usuários do sistema  
 [✅] CidadaoDAO – informações dos cidadãos (denunciantes ou suspeitos)  
 [✅] QueixaDAO – registro e gerenciamento das queixas  
 [✅] TipoQueixaDAO – categorias de queixa (ex: furto, roubo, etc.)  
