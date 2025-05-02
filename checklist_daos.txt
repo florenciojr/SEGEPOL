@@ -11,6 +11,6 @@
 [✅] AtribuicaoDAO – atribuição de queixas aos agentes/responsáveis  
 [✅] ProvaDAO – registro de provas materiais e testemunhais  
 [✅] MandadoPrisaoDAO – mandados emitidos durante a investigação  
-[ ] VeiculoRoubadoDAO – cadastro de veículos associados a crimes  
-[ ] PatrulhaDAO – registro de patrulhas realizadas  
+[✅] VeiculoRoubadoDAO – cadastro de veículos associados a crimes  
+[✅] PatrulhaDAO – registro de patrulhas realizadas  
 [ ] LoginDAO – histórico de logins dos usuários (opcional)
