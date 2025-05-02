@@ -21,22 +21,23 @@ import model.Usuario;
 import model.Conexao;
 
 public class UsuarioDAO {
-    private static final String[] CARGOS_DISPONIVEIS = {
+    // Altere de private para public
+    public static final String[] CARGOS_DISPONIVEIS = {
         "Agente", "Investigador", "Comandante", "Administrador"
     };
     
-    private static final String[] ESTADOS_DISPONIVEIS = {
+    public static final String[] ESTADOS_DISPONIVEIS = {
         "Ativo", "Inativo", "Suspenso", "Férias"
     };
     
-    private static final String[] PERFIS_DISPONIVEIS = {
+    public static final String[] PERFIS_DISPONIVEIS = {
         "Operacional", "Tático", "Estratégico", "Administrativo"
     };
     
-    private static final String UPLOAD_DIR = "uploads/usuarios/";
-    private static final int MAX_FOTO_SIZE_KB = 2048; // 2MB
-    private static final String[] EXTENSOES_PERMITIDAS = {".jpg", ".jpeg", ".png", ".gif"};
-
+    public static final String[] EXTENSOES_PERMITIDAS = {".jpg", ".jpeg", ".png", ".gif"};
+    public static final int MAX_FOTO_SIZE_KB = 2048; // 2MB
+    public static final String UPLOAD_DIR = "uploads/usuarios/";
+    
     // Método para inserir um novo usuário com tratamento completo de erros
     public boolean inserirUsuario(Usuario usuario) throws SQLException {
         String sql = "INSERT INTO usuarios (nome, email, senha, cargo, telefone, status, perfil, estado, numero_identificacao, foto_perfil, data_cadastro) " +
@@ -449,7 +450,7 @@ public class UsuarioDAO {
     }
     
     // Método para remover foto de perfil antiga
-    private static void removerFotoAntiga(String caminhoFoto) {
+    public static void removerFotoAntiga(String caminhoFoto) {
         if (caminhoFoto != null && !caminhoFoto.isEmpty()) {
             try {
                 Files.deleteIfExists(Paths.get(caminhoFoto));
