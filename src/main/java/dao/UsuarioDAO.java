@@ -10,6 +10,7 @@ package dao;
  */
 
 
+
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -17,17 +18,13 @@ import java.util.Scanner;
 import java.nio.file.*;
 import java.io.File;
 import java.io.IOException;
+import javax.servlet.ServletContext;
 import model.Usuario;
 import model.Conexao;
 
 public class UsuarioDAO {
-    // Altere de private para public
     public static final String[] CARGOS_DISPONIVEIS = {
         "Agente", "Investigador", "Comandante", "Administrador"
-    };
-    
-    public static final String[] ESTADOS_DISPONIVEIS = {
-        "Ativo", "Inativo", "Suspenso", "Férias"
     };
     
     public static final String[] PERFIS_DISPONIVEIS = {
@@ -38,10 +35,9 @@ public class UsuarioDAO {
     public static final int MAX_FOTO_SIZE_KB = 2048; // 2MB
     public static final String UPLOAD_DIR = "uploads/usuarios/";
     
-    // Método para inserir um novo usuário com tratamento completo de erros
     public boolean inserirUsuario(Usuario usuario) throws SQLException {
-        String sql = "INSERT INTO usuarios (nome, email, senha, cargo, telefone, status, perfil, estado, numero_identificacao, foto_perfil, data_cadastro) " +
-                     "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)";
+        String sql = "INSERT INTO usuarios (nome, email, senha, cargo, telefone, status, perfil, numero_identificacao, foto_perfil, data_cadastro) " +
+                     "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)";
 
         Connection conn = null;
         PreparedStatement stmt = null;
@@ -49,11 +45,10 @@ public class UsuarioDAO {
         
         try {
             conn = Conexao.conectar();
-            conn.setAutoCommit(false); // Inicia transação
+            conn.setAutoCommit(false);
             
             stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
 
-            // Validações antes de inserir
             if (usuario.getNome() == null || usuario.getNome().trim().isEmpty()) {
                 throw new SQLException("O nome do usuário é obrigatório.");
             }
@@ -62,15 +57,14 @@ public class UsuarioDAO {
                 throw new SQLException("Email inválido.");
             }
             
-           if (buscarUsuarioPorEmail(usuario.getEmail())) {
-    throw new SQLException("Já existe um usuário com este email.");
-}
+            if (buscarUsuarioPorEmail(usuario.getEmail())) {
+                throw new SQLException("Já existe um usuário com este email.");
+            }
             
             if (buscarUsuarioPorNumeroIdentificacao(usuario.getNumero_identificacao()) != null) {
                 throw new SQLException("Número de identificação já está em uso.");
             }
 
-            // Setar parâmetros
             stmt.setString(1, usuario.getNome());
             stmt.setString(2, usuario.getEmail());
             stmt.setString(3, usuario.getSenha());
@@ -78,9 +72,8 @@ public class UsuarioDAO {
             stmt.setString(5, usuario.getContacto());
             stmt.setString(6, usuario.getStatus());
             stmt.setString(7, usuario.getPerfil());
-            stmt.setString(8, usuario.getEstado());
-            stmt.setString(9, usuario.getNumero_identificacao());
-            stmt.setString(10, usuario.getFoto_perfil());
+            stmt.setString(8, usuario.getNumero_identificacao());
+            stmt.setString(9, usuario.getFoto_perfil());
 
             int affectedRows = stmt.executeUpdate();
             
@@ -91,25 +84,23 @@ public class UsuarioDAO {
             generatedKeys = stmt.getGeneratedKeys();
             if (generatedKeys.next()) {
                 usuario.setId_usuario(generatedKeys.getInt(1));
-                conn.commit(); // Confirma transação
+                conn.commit();
                 return true;
             } else {
                 throw new SQLException("Falha ao criar usuário, nenhum ID obtido.");
             }
         } catch (SQLException e) {
             if (conn != null) {
-                conn.rollback(); // Rollback em caso de erro
+                conn.rollback();
             }
-            throw e; // Re-lança a exceção para tratamento específico
+            throw e;
         } finally {
-            // Fecha recursos em ordem inversa de abertura
             if (generatedKeys != null) generatedKeys.close();
             if (stmt != null) stmt.close();
             if (conn != null) conn.close();
         }
     }
 
-    // Método para listar todos os usuários com paginação
     public List<Usuario> listarUsuarios(int pagina, int itensPorPagina) throws SQLException {
         List<Usuario> lista = new ArrayList<>();
         String sql = "SELECT * FROM usuarios ORDER BY nome LIMIT ? OFFSET ?";
@@ -129,7 +120,6 @@ public class UsuarioDAO {
         return lista;
     }
     
-    // Método para contar o total de usuários
     public int contarUsuarios() throws SQLException {
         String sql = "SELECT COUNT(*) AS total FROM usuarios";
         
@@ -144,10 +134,8 @@ public class UsuarioDAO {
         }
     }
     
-    // Método auxiliar para mapear ResultSet para objeto Usuario
     private Usuario mapearUsuario(ResultSet rs) throws SQLException {
-    Usuario usuario = new Usuario();
-    usuario.setId_usuario(rs.getInt("id_usuario"));
+        Usuario usuario = new Usuario();
         usuario.setId_usuario(rs.getInt("id_usuario"));
         usuario.setNome(rs.getString("nome"));
         usuario.setEmail(rs.getString("email"));
@@ -156,16 +144,13 @@ public class UsuarioDAO {
         usuario.setContacto(rs.getString("telefone"));
         usuario.setStatus(rs.getString("status"));
         usuario.setPerfil(rs.getString("perfil"));
-        usuario.setEstado(rs.getString("estado"));
         usuario.setNumero_identificacao(rs.getString("numero_identificacao"));
         usuario.setFoto_perfil(rs.getString("foto_perfil"));
         usuario.setData_cadastro(rs.getTimestamp("data_cadastro"));
-       usuario.setData_atualizacao(rs.getTimestamp("data_atualizacao"));
-    return usuario;
-      
+        usuario.setData_atualizacao(rs.getTimestamp("data_atualizacao"));
+        return usuario;
     }
     
-    // Método para buscar usuário por número de identificação
     public Usuario buscarUsuarioPorNumeroIdentificacao(String numeroIdentificacao) throws SQLException {
         String sql = "SELECT * FROM usuarios WHERE numero_identificacao = ?";
         
@@ -183,22 +168,20 @@ public class UsuarioDAO {
         }
     }
     
-    // Método para verificar se email já existe
-  public boolean buscarUsuarioPorEmail(String email) throws SQLException {
-    String sql = "SELECT 1 FROM usuarios WHERE email = ?";
-    
-    try (Connection conn = Conexao.conectar();
-         PreparedStatement stmt = conn.prepareStatement(sql)) {
+    public boolean buscarUsuarioPorEmail(String email) throws SQLException {
+        String sql = "SELECT 1 FROM usuarios WHERE email = ?";
         
-        stmt.setString(1, email);
-        
-        try (ResultSet rs = stmt.executeQuery()) {
-            return rs.next(); // Retorna true se encontrou um usuário com este email
+        try (Connection conn = Conexao.conectar();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            
+            stmt.setString(1, email);
+            
+            try (ResultSet rs = stmt.executeQuery()) {
+                return rs.next();
+            }
         }
     }
-}
 
-    // Método para buscar usuário por ID
     public Usuario buscarUsuarioPorId(int id) throws SQLException {
         String sql = "SELECT * FROM usuarios WHERE id_usuario = ?";
         
@@ -216,10 +199,9 @@ public class UsuarioDAO {
         }
     }
 
-    // Método para atualizar um usuário com tratamento completo de erros
     public boolean atualizarUsuario(Usuario usuario) throws SQLException {
         String sql = "UPDATE usuarios SET nome = ?, email = ?, senha = ?, cargo = ?, telefone = ?, " +
-                     "status = ?, perfil = ?, estado = ?, numero_identificacao = ?, foto_perfil = ?, " +
+                     "status = ?, perfil = ?, numero_identificacao = ?, foto_perfil = ?, " +
                      "data_atualizacao = CURRENT_TIMESTAMP WHERE id_usuario = ?";
 
         Connection conn = null;
@@ -227,14 +209,12 @@ public class UsuarioDAO {
         
         try {
             conn = Conexao.conectar();
-            conn.setAutoCommit(false); // Inicia transação
+            conn.setAutoCommit(false);
             
-            // Verifica se o novo email já está em uso por outro usuário
             if (emailEmUsoPorOutroUsuario(usuario.getEmail(), usuario.getId_usuario())) {
                 throw new SQLException("Este email já está sendo usado por outro usuário.");
             }
             
-            // Verifica se o novo número de identificação já está em uso
             if (numeroIdentificacaoEmUso(usuario.getNumero_identificacao(), usuario.getId_usuario())) {
                 throw new SQLException("Este número de identificação já está em uso por outro usuário.");
             }
@@ -248,18 +228,17 @@ public class UsuarioDAO {
             stmt.setString(5, usuario.getContacto());
             stmt.setString(6, usuario.getStatus());
             stmt.setString(7, usuario.getPerfil());
-            stmt.setString(8, usuario.getEstado());
-            stmt.setString(9, usuario.getNumero_identificacao());
-            stmt.setString(10, usuario.getFoto_perfil());
-            stmt.setInt(11, usuario.getId_usuario());
+            stmt.setString(8, usuario.getNumero_identificacao());
+            stmt.setString(9, usuario.getFoto_perfil());
+            stmt.setInt(10, usuario.getId_usuario());
 
             int affectedRows = stmt.executeUpdate();
-            conn.commit(); // Confirma transação
+            conn.commit();
             
             return affectedRows > 0;
         } catch (SQLException e) {
             if (conn != null) {
-                conn.rollback(); // Rollback em caso de erro
+                conn.rollback();
             }
             throw e;
         } finally {
@@ -268,7 +247,6 @@ public class UsuarioDAO {
         }
     }
     
-    // Verifica se email está em uso por outro usuário
     private boolean emailEmUsoPorOutroUsuario(String email, int idUsuario) throws SQLException {
         String sql = "SELECT 1 FROM usuarios WHERE email = ? AND id_usuario != ?";
         
@@ -284,7 +262,6 @@ public class UsuarioDAO {
         }
     }
     
-    // Verifica se número de identificação está em uso por outro usuário
     private boolean numeroIdentificacaoEmUso(String numeroIdentificacao, int idUsuario) throws SQLException {
         String sql = "SELECT 1 FROM usuarios WHERE numero_identificacao = ? AND id_usuario != ?";
         
@@ -300,7 +277,6 @@ public class UsuarioDAO {
         }
     }
 
-    // Método para desativar um usuário (inativação em vez de exclusão física)
     public boolean desativarUsuario(int id) throws SQLException {
         String sql = "UPDATE usuarios SET status = 'Inativo', data_atualizacao = CURRENT_TIMESTAMP WHERE id_usuario = ?";
         
@@ -312,7 +288,6 @@ public class UsuarioDAO {
         }
     }
     
-    // Método para reativar um usuário
     public boolean reativarUsuario(int id) throws SQLException {
         String sql = "UPDATE usuarios SET status = 'Ativo', data_atualizacao = CURRENT_TIMESTAMP WHERE id_usuario = ?";
         
@@ -324,7 +299,6 @@ public class UsuarioDAO {
         }
     }
     
-    // Método para listar cargos disponíveis
     public static void listarCargosDisponiveis() {
         System.out.println("\nCargos disponíveis:");
         for (int i = 0; i < CARGOS_DISPONIVEIS.length; i++) {
@@ -332,15 +306,6 @@ public class UsuarioDAO {
         }
     }
     
-    // Método para listar estados disponíveis
-    public static void listarEstadosDisponiveis() {
-        System.out.println("\nEstados disponíveis:");
-        for (int i = 0; i < ESTADOS_DISPONIVEIS.length; i++) {
-            System.out.println((i + 1) + ". " + ESTADOS_DISPONIVEIS[i]);
-        }
-    }
-    
-    // Método para listar perfis disponíveis
     public static void listarPerfisDisponiveis() {
         System.out.println("\nPerfis disponíveis:");
         for (int i = 0; i < PERFIS_DISPONIVEIS.length; i++) {
@@ -348,7 +313,6 @@ public class UsuarioDAO {
         }
     }
     
-    // Método para selecionar cargo
     public static String selecionarCargo(Scanner sc) {
         listarCargosDisponiveis();
         System.out.print("Escolha o cargo (1-" + CARGOS_DISPONIVEIS.length + "): ");
@@ -360,25 +324,9 @@ public class UsuarioDAO {
         } catch (NumberFormatException e) {
             System.out.println("Opção inválida. Usando cargo padrão (Agente).");
         }
-        return "Agente"; // Default
+        return "Agente";
     }
     
-    // Método para selecionar estado
-    public static String selecionarEstado(Scanner sc) {
-        listarEstadosDisponiveis();
-        System.out.print("Escolha o estado (1-" + ESTADOS_DISPONIVEIS.length + "): ");
-        try {
-            int escolha = Integer.parseInt(sc.nextLine());
-            if (escolha > 0 && escolha <= ESTADOS_DISPONIVEIS.length) {
-                return ESTADOS_DISPONIVEIS[escolha - 1];
-            }
-        } catch (NumberFormatException e) {
-            System.out.println("Opção inválida. Usando estado padrão (Ativo).");
-        }
-        return "Ativo"; // Default
-    }
-    
-    // Método para selecionar perfil
     public static String selecionarPerfil(Scanner sc) {
         listarPerfisDisponiveis();
         System.out.print("Escolha o perfil (1-" + PERFIS_DISPONIVEIS.length + "): ");
@@ -390,77 +338,26 @@ public class UsuarioDAO {
         } catch (NumberFormatException e) {
             System.out.println("Opção inválida. Usando perfil padrão (Operacional).");
         }
-        return "Operacional"; // Default
+        return "Operacional";
     }
 
-    // Método para upload de foto de perfil com validações
-    public static String uploadFotoPerfil(Scanner sc, String nomeUsuario) {
-        System.out.print("\nCaminho completo da foto de perfil (deixe em branco para pular): ");
-        String caminhoFoto = sc.nextLine().trim();
-        
-        if (caminhoFoto.isEmpty()) {
-            return null;
-        }
-        
-        try {
-            // Verifica se o arquivo existe
-            Path sourcePath = Paths.get(caminhoFoto);
-            if (!Files.exists(sourcePath)) {
-                throw new IOException("Arquivo não encontrado.");
-            }
-            
-            // Verifica a extensão do arquivo
-            String extensao = caminhoFoto.substring(caminhoFoto.lastIndexOf(".")).toLowerCase();
-            boolean extensaoValida = false;
-            for (String ext : EXTENSOES_PERMITIDAS) {
-                if (ext.equals(extensao)) {
-                    extensaoValida = true;
-                    break;
-                }
-            }
-            if (!extensaoValida) {
-                throw new IOException("Extensão de arquivo não permitida. Use: " + String.join(", ", EXTENSOES_PERMITIDAS));
-            }
-            
-            // Verifica o tamanho do arquivo
-            long fileSize = Files.size(sourcePath);
-            if (fileSize > MAX_FOTO_SIZE_KB * 1024) {
-                throw new IOException("Tamanho do arquivo excede o limite de " + MAX_FOTO_SIZE_KB + "KB.");
-            }
-            
-            // Cria o diretório de uploads se não existir
-            File uploadDir = new File(UPLOAD_DIR);
-            if (!uploadDir.exists()) {
-                uploadDir.mkdirs();
-            }
-            
-            // Gera um nome único para o arquivo
-            String nomeArquivo = nomeUsuario.replaceAll("\\s+", "_").toLowerCase() + "_" + System.currentTimeMillis() + extensao;
-            String caminhoDestino = UPLOAD_DIR + nomeArquivo;
-            
-            // Copia o arquivo para o diretório de uploads
-            Files.copy(sourcePath, Paths.get(caminhoDestino), StandardCopyOption.REPLACE_EXISTING);
-            
-            System.out.println("Foto carregada com sucesso: " + caminhoDestino);
-            return caminhoDestino;
-        } catch (Exception e) {
-            System.err.println("Erro ao fazer upload da foto: " + e.getMessage());
-            return null;
-        }
-    }
-    
-    // Método para remover foto de perfil antiga
-    public static void removerFotoAntiga(String caminhoFoto) {
-        if (caminhoFoto != null && !caminhoFoto.isEmpty()) {
+    public void removerFotoAntiga(String caminhoFoto, ServletContext context) {
+        if (caminhoFoto != null && !caminhoFoto.isEmpty() && context != null) {
             try {
-                Files.deleteIfExists(Paths.get(caminhoFoto));
+                String fullPath = context.getRealPath("") + File.separator + caminhoFoto;
+                Path path = Paths.get(fullPath);
+                Files.deleteIfExists(path);
             } catch (IOException e) {
                 System.err.println("Aviso: Não foi possível remover a foto antiga: " + e.getMessage());
             }
         }
     }
+}
 
-    public static void main(String[] args) {
+
+//MAIN PARA TESTAR O DAO INTERNAMENTE 
+
+/*  public static void main(String[] args) {
         UsuarioDAO dao = new UsuarioDAO();
         Scanner sc = new Scanner(System.in);
         int opcao;
@@ -887,6 +784,9 @@ public class UsuarioDAO {
         System.out.println("Data Cadastro: " + usuario.getData_cadastro());
         System.out.println("Última Atualização: " + usuario.getData_atualizacao());
     }
-}
 
-// USAR NO FINAL OS MAIN PARA CRIAR OS SERVLETS
+    private Object getServletContext() {
+        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+    }
+}
+*/

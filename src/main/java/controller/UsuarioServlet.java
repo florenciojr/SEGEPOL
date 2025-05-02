@@ -4,8 +4,7 @@
  */
 package controller;
 
-import java.io.IOException;
-import java.io.PrintWriter;
+
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
@@ -18,16 +17,22 @@ import javax.servlet.http.HttpServletResponse;
  */
 
 
+
+
 import dao.UsuarioDAO;
-import java.io.File;
 import model.Usuario;
 import javax.servlet.*;
 import javax.servlet.http.*;
 import javax.servlet.annotation.*;
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.sql.SQLException;
+import java.util.Arrays;
 import java.util.List;
+import java.io.File;
 
 @WebServlet(name = "UsuarioServlet", urlPatterns = {"/usuarios"})
 @MultipartConfig(
@@ -45,13 +50,15 @@ public class UsuarioServlet extends HttpServlet {
     }
 
     @Override
-    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+protected void doGet(HttpServletRequest request, HttpServletResponse response)
+        throws ServletException, IOException {
+    try {
         String action = request.getParameter("action");
         
-        try {
-            if (action == null) {
-                listarUsuarios(request, response);
-            } else {
+        if (action == null) {
+            // Carrega a lista automaticamente
+            listarUsuarios(request, response);
+        } else {
                 switch (action) {
                     case "novo":
                         mostrarFormularioNovoUsuario(request, response);
@@ -102,7 +109,6 @@ public class UsuarioServlet extends HttpServlet {
     }
 
     private void listarUsuarios(HttpServletRequest request, HttpServletResponse response) throws SQLException, ServletException, IOException {
-        // Paginação
         int pagina = 1;
         int itensPorPagina = 10;
         
@@ -124,7 +130,6 @@ public class UsuarioServlet extends HttpServlet {
 
     private void mostrarFormularioNovoUsuario(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         request.setAttribute("cargosDisponiveis", UsuarioDAO.CARGOS_DISPONIVEIS);
-        request.setAttribute("estadosDisponiveis", UsuarioDAO.ESTADOS_DISPONIVEIS);
         request.setAttribute("perfisDisponiveis", UsuarioDAO.PERFIS_DISPONIVEIS);
         
         RequestDispatcher dispatcher = request.getRequestDispatcher("/view/usuarios/formulario.jsp");
@@ -138,7 +143,6 @@ public class UsuarioServlet extends HttpServlet {
         if (usuario != null) {
             request.setAttribute("usuario", usuario);
             request.setAttribute("cargosDisponiveis", UsuarioDAO.CARGOS_DISPONIVEIS);
-            request.setAttribute("estadosDisponiveis", UsuarioDAO.ESTADOS_DISPONIVEIS);
             request.setAttribute("perfisDisponiveis", UsuarioDAO.PERFIS_DISPONIVEIS);
             
             RequestDispatcher dispatcher = request.getRequestDispatcher("/view/usuarios/formulario.jsp");
@@ -166,7 +170,6 @@ public class UsuarioServlet extends HttpServlet {
         preencherUsuarioFromRequest(usuario, request);
         
         try {
-            // Upload da foto de perfil
             Part filePart = request.getPart("foto_perfil");
             if (filePart != null && filePart.getSize() > 0) {
                 String fileName = processarUploadFoto(filePart, usuario.getNome());
@@ -197,12 +200,10 @@ public class UsuarioServlet extends HttpServlet {
         preencherUsuarioFromRequest(usuario, request);
         
         try {
-            // Upload da nova foto de perfil, se fornecida
             Part filePart = request.getPart("foto_perfil");
             if (filePart != null && filePart.getSize() > 0) {
-                // Remove a foto antiga se existir
                 if (usuario.getFoto_perfil() != null && !usuario.getFoto_perfil().isEmpty()) {
-                    usuarioDAO.removerFotoAntiga(usuario.getFoto_perfil());
+                    usuarioDAO.removerFotoAntiga(usuario.getFoto_perfil(), request.getServletContext());
                 }
                 
                 String fileName = processarUploadFoto(filePart, usuario.getNome());
@@ -244,58 +245,50 @@ public class UsuarioServlet extends HttpServlet {
     private void preencherUsuarioFromRequest(Usuario usuario, HttpServletRequest request) {
         usuario.setNome(request.getParameter("nome"));
         usuario.setEmail(request.getParameter("email"));
-        usuario.setSenha(request.getParameter("senha")); // Na prática, deveria ser hash da senha
+        usuario.setSenha(request.getParameter("senha"));
         usuario.setCargo(request.getParameter("cargo"));
         usuario.setContacto(request.getParameter("telefone"));
         usuario.setStatus(request.getParameter("status"));
         usuario.setPerfil(request.getParameter("perfil"));
-        usuario.setEstado(request.getParameter("estado"));
         usuario.setNumero_identificacao(request.getParameter("numero_identificacao"));
         
-        // Se for edição, mantém o ID
         if (request.getParameter("id") != null) {
             usuario.setId_usuario(Integer.parseInt(request.getParameter("id")));
         }
     }
 
     private String processarUploadFoto(Part filePart, String nomeUsuario) throws IOException {
+        if (filePart == null || filePart.getSize() == 0) {
+            return null;
+        }
+        
         String fileName = Paths.get(filePart.getSubmittedFileName()).getFileName().toString();
         String fileExtension = fileName.substring(fileName.lastIndexOf(".")).toLowerCase();
         
-        // Verifica extensão permitida
-        boolean extensaoValida = false;
-        for (String ext : UsuarioDAO.EXTENSOES_PERMITIDAS) {
-            if (ext.equals(fileExtension)) {
-                extensaoValida = true;
-                break;
+        if (!Arrays.asList(UsuarioDAO.EXTENSOES_PERMITIDAS).contains(fileExtension)) {
+            throw new IOException("Extensão não permitida. Use: " + Arrays.toString(UsuarioDAO.EXTENSOES_PERMITIDAS));
+        }
+        
+        if (filePart.getSize() > UsuarioDAO.MAX_FOTO_SIZE_KB * 1024) {
+            throw new IOException("Tamanho máximo excedido (" + UsuarioDAO.MAX_FOTO_SIZE_KB + "KB)");
+        }
+        
+        String uploadDirPath = getServletContext().getRealPath("") + File.separator + UsuarioDAO.UPLOAD_DIR;
+        File uploadDir = new File(uploadDirPath);
+        if (!uploadDir.exists()) {
+            boolean dirCreated = uploadDir.mkdirs();
+            if (!dirCreated) {
+                throw new IOException("Não foi possível criar o diretório de upload: " + uploadDirPath);
             }
         }
         
-        if (!extensaoValida) {
-            throw new IOException("Extensão de arquivo não permitida. Use: " + 
-                String.join(", ", UsuarioDAO.EXTENSOES_PERMITIDAS));
+        String novoNome = "user_" + System.currentTimeMillis() + fileExtension;
+        String filePath = uploadDirPath + File.separator + novoNome;
+        
+        try (InputStream fileContent = filePart.getInputStream()) {
+            Files.copy(fileContent, Paths.get(filePath), StandardCopyOption.REPLACE_EXISTING);
         }
         
-        // Verifica tamanho do arquivo
-        if (filePart.getSize() > UsuarioDAO.MAX_FOTO_SIZE_KB * 1024) {
-            throw new IOException("Tamanho do arquivo excede o limite de " + 
-                UsuarioDAO.MAX_FOTO_SIZE_KB + "KB.");
-        }
-        
-        // Cria diretório de upload se não existir
-        File uploadDir = new File(UsuarioDAO.UPLOAD_DIR);
-        if (!uploadDir.exists()) {
-            uploadDir.mkdirs();
-        }
-        
-        // Gera nome único para o arquivo
-        String novoNome = nomeUsuario.replaceAll("\\s+", "_").toLowerCase() + 
-            "_" + System.currentTimeMillis() + fileExtension;
-        String caminhoCompleto = UsuarioDAO.UPLOAD_DIR + novoNome;
-        
-        // Salva o arquivo
-        filePart.write(caminhoCompleto);
-        
-        return caminhoCompleto;
+        return UsuarioDAO.UPLOAD_DIR + "/" + novoNome;
     }
 }
