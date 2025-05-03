@@ -188,4 +188,12 @@ public class Usuario {
     public boolean isAtivo() {
         return "Ativo".equalsIgnoreCase(this.status);
     }
+
+    public void setData_criacao(Timestamp timestamp) {
+        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+    }
+
+    public void setUltimo_login(Timestamp timestamp) {
+        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+    }
 }

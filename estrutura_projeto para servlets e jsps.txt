@@ -1,0 +1,78 @@
+# Estrutura de Servlets e JSPs para Sistema de Gestão Policial
+
+## Estrutura de Pastas:
+/projeto
+├── /src
+│   ├── /controller (servlets)
+│   ├── /model (classes DAO e entidades)
+│   ├── /util (utilitários)
+├── /WebContent
+│   ├── /WEB-INF (web.xml, libs)
+│   ├── /css (estilos)
+│   ├── /js (scripts)
+│   ├── /jsp (páginas JSP)
+
+## Servlets (Controller):
+1. LoginServlet.java       - Autenticação de usuários (logins, usuários).
+2. CidadaoServlet.java     - CRUD de cidadãos.
+3. QueixaServlet.java      - Gestão de queixas (com tipos_queixa, andamentos).
+4. PatrulhaServlet.java    - Controle de patrulhas e atribuições.
+5. MandadoServlet.java     - CRUD de mandados de prisão.
+6. ProvaServlet.java       - Upload de provas (multipart/form-data).
+7. VeiculoServlet.java     - Registro de veículos roubados.
+8. RelatorioServlet.java   - Geração de relatórios (PDF/Excel).
+
+## Páginas JSP (View):
+### Autenticação:
+- login.jsp
+- recuperar-senha.jsp
+
+### Dashboard:
+- dashboard.jsp
+
+### Cidadãos:
+- listar-cidadaos.jsp
+- cadastrar-cidadao.jsp
+
+### Queixas:
+- nova-queixa.jsp
+- detalhe-queixa.jsp
+- listar-queixas.jsp
+
+### Patrulhas:
+- alocar-patrulha.jsp
+
+### Mandados:
+- emitir-mandado.jsp
+- mandados-ativos.jsp
+
+### Provas:
+- adicionar-prova.jsp
+
+### Veículos:
+- veiculos-roubados.jsp
+
+### Relatórios:
+- relatorios.jsp
+
+### Admin:
+- gerenciar-usuarios.jsp
+
+## Funcionalidades Interativas:
+1. Filtros Dinâmicos (AJAX) - Ex: Busca de cidadãos sem recarregar a página.
+2. Upload de Provas - Usar Apache Commons FileUpload.
+3. Notificações em Tempo Real - WebSockets para atualizações.
+4. Validação Client-Side - JavaScript para CPF, datas, etc.
+5. Paginação - SQL LIMIT em listagens.
+
+## Fluxo de Exemplo:
+1. Cadastro de Queixa:
+   Usuário → nova-queixa.jsp → QueixaServlet → detalhe-queixa.jsp
+
+2. Atualização de Andamento:
+   Agente → detalhe-queixa.jsp → AndamentoServlet → atualização em BD.
+
+## Tecnologias Recomendadas:
+- Front-end: Bootstrap, jQuery, DataTables.
+- Back-end: Servlet 4.0+, JSTL, Hibernate (opcional).
+- Segurança: Filtros (Filter) para controle de sessão.

@@ -352,8 +352,80 @@ public class UsuarioDAO {
             }
         }
     }
+    
+    
+    
+    
+    
+    // Adicione estes métodos à sua classe UsuarioDAO existente
+
+/**
+ * Autentica um usuário usando email ou número de identificação e senha
+ * @param identificacao Email ou número de identificação do usuário
+ * @param senha Senha do usuário (já deve vir hashada da camada de serviço)
+ * @return Objeto Usuario se autenticação for bem-sucedida, null caso contrário
+ * @throws SQLException se ocorrer um erro no banco de dados
+ */
+public Usuario autenticarUsuario(String identificacao, String senha) throws SQLException {
+    String sql = "SELECT * FROM usuarios WHERE (email = ? OR numero_identificacao = ?) AND senha = ? AND status = 'ativo' LIMIT 1";
+    
+    try (Connection conn = Conexao.conectar();
+         PreparedStatement stmt = conn.prepareStatement(sql)) {
+        
+        stmt.setString(1, identificacao);
+        stmt.setString(2, identificacao);
+        stmt.setString(3, senha);
+        
+        try (ResultSet rs = stmt.executeQuery()) {
+            if (rs.next()) {
+                // Usar o método de mapeamento existente se disponível
+                Usuario usuario = mapearUsuario(rs);
+                
+                // Registrar o login bem-sucedido
+                registrarLogin(usuario.getId_usuario());
+                
+                return usuario;
+            }
+        }
+    }
+    return null;
 }
 
+/**
+ * Registra a data e hora do último login do usuário
+ * @param idUsuario ID do usuário
+ * @return true se o registro for bem-sucedido, false caso contrário
+ * @throws SQLException se ocorrer um erro no banco de dados
+ */
+public boolean registrarLogin(int idUsuario) throws SQLException {
+    String sql = "UPDATE usuarios SET ultimo_login = CURRENT_TIMESTAMP WHERE id_usuario = ?";
+    
+    try (Connection conn = Conexao.conectar();
+         PreparedStatement stmt = conn.prepareStatement(sql)) {
+        
+        stmt.setInt(1, idUsuario);
+        return stmt.executeUpdate() > 0;
+    }
+}
+
+// Método auxiliar para mapear ResultSet para Usuario (se não existir)
+/*private Usuario mapearUsuario(ResultSet rs) throws SQLException {
+    Usuario usuario = new Usuario();
+    usuario.setId_usuario(rs.getInt("id_usuario"));
+    usuario.setNome(rs.getString("nome"));
+    usuario.setEmail(rs.getString("email"));
+    usuario.setCargo(rs.getString("cargo"));
+    usuario.setContacto(rs.getString("contacto"));
+    usuario.setStatus(rs.getString("status"));
+    usuario.setPerfil(rs.getString("perfil"));
+    usuario.setNumero_identificacao(rs.getString("numero_identificacao"));
+    usuario.setFoto_perfil(rs.getString("foto_perfil"));
+    usuario.setData_criacao(rs.getTimestamp("data_criacao"));
+    usuario.setUltimo_login(rs.getTimestamp("ultimo_login"));
+    return usuario;
+}*/
+
+}
 
 //MAIN PARA TESTAR O DAO INTERNAMENTE 
 
