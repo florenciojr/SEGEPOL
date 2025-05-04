@@ -1,0 +1,83 @@
+# Estrutura de Servlets e JSPs para Sistema de Gestão Policial
+
+## Estrutura de Pastas:
+/projeto
+├── /src
+│   ├── /controller (servlets)
+│   ├── /model (classes DAO e entidades)
+│   ├── /util (utilitários)
+├── /WebContent
+│   ├── /WEB-INF (web.xml, libs)
+│   ├── /css (estilos)
+│   ├── /js (scripts)
+│   ├── /jsp (páginas JSP)
+# Estrutura de Servlets e JSPs para Sistema de Gestão Policial
+
+## ✅ Checklist Geral
+- [ ] Estrutura de pastas criada
+- [ ] Dependências (JDBC, Bootstrap, etc.) configuradas
+- [ ] web.xml configurado
+
+## 🛠️ Servlets (Controller)
+- [ ] LoginServlet.java
+- [ ] CidadaoServlet.java
+- [ ] QueixaServlet.java
+- [ ] PatrulhaServlet.java
+- [ ] MandadoServlet.java
+- [ ] ProvaServlet.java
+- [ ] VeiculoServlet.java
+- [ ] RelatorioServlet.java
+
+## 🖥️ Páginas JSP (View)
+### Autenticação
+- [ ] login.jsp
+- [ ] recuperar-senha.jsp
+
+### Dashboard
+- [ ] dashboard.jsp
+
+### Cidadãos
+- [ ] listar-cidadaos.jsp
+- [ ] cadastrar-cidadao.jsp
+
+### Queixas
+- [ ] nova-queixa.jsp
+- [ ] detalhe-queixa.jsp
+- [ ] listar-queixas.jsp
+
+### Patrulhas
+- [ ] alocar-patrulha.jsp
+
+### Mandados
+- [ ] emitir-mandado.jsp
+- [ ] mandados-ativos.jsp
+
+### Provas
+- [ ] adicionar-prova.jsp
+
+### Veículos
+- [ ] veiculos-roubados.jsp
+
+### Relatórios
+- [ ] relatorios.jsp
+
+### Admin
+- [ ] gerenciar-usuarios.jsp
+
+## ⚙️ Funcionalidades Interativas
+- [ ] Filtros dinâmicos com AJAX
+- [ ] Upload de arquivos (provas)
+- [ ] Notificações em tempo real (WebSockets)
+- [ ] Validação client-side (JavaScript)
+- [ ] Paginação em listagens
+
+## 🔄 Fluxos Principais
+- [ ] Cadastro de queixa (nova-queixa.jsp → QueixaServlet → detalhe-queixa.jsp)
+- [ ] Atualização de andamento (detalhe-queixa.jsp → AndamentoServlet → BD)
+- [ ] Autenticação (login.jsp → LoginServlet → dashboard.jsp)
+
+## 📌 Tecnologias Implementadas
+- [ ] Front-end: Bootstrap/jQuery
+- [ ] Back-end: JSTL/Servlets
+- [ ] Banco de dados: JDBC ou Hibernate
+- [ ] Segurança: Filtros (Filter)

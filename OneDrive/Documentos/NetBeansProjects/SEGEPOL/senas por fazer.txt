@@ -1,0 +1,30 @@
+# DICA PARA IMPLEMENTAÇÃO FUTURA - SOFT DELETE
+
+1. ADICIONE ESTAS COLUNAS EM TODAS AS TABELAS:
+   - is_deleted TINYINT(1) DEFAULT 0
+   - deleted_at TIMESTAMP NULL
+   - deleted_by INT NULL (opcional - para registrar quem deletou)
+
+2. EM TODAS AS CONSULTAS SELECT, ADICIONE:
+   WHERE is_deleted = 0
+
+3. PARA "DELETAR", USE:
+   UPDATE tabela SET is_deleted = 1, deleted_at = NOW() WHERE id = ?
+
+4. PARA RESTAURAR:
+   UPDATE tabela SET is_deleted = 0, deleted_at = NULL WHERE id = ?
+
+5. (OPCIONAL) CRIE UMA VIEW PARA VER REGISTROS REMOVIDOS:
+   CREATE VIEW vw_tabela_removidos AS
+   SELECT * FROM tabela WHERE is_deleted = 1
+
+# BENEFÍCIOS:
+- Dados não são perdidos
+- Pode restaurar quando precisar
+- Mantém histórico completo
+
+# QUANDO IMPLEMENTAR:
+1. Fazer backup do banco
+2. Adicionar colunas em todas tabelas
+3. Modificar todos os DAOs
+4. Testar exaustivamente
