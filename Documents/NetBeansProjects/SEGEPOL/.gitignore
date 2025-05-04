@@ -1,0 +1,33 @@
+# Ignorar arquivos do sistema
+*.log
+*.tmp
+*.dat
+*.ini
+*.regtrans-ms
+*.blf
+.DS_Store
+Thumbs.db
+
+# Ignorar pastas do Windows
+AppData/
+Contacts/
+Desktop/
+Downloads/
+Favorites/
+Links/
+Music/
+OneDrive/
+Pictures/
+Saved Games/
+Searches/
+Videos/
+Documents/Meus Vídeos/
+Documents/Minhas Imagens/
+Documents/Minhas Músicas/
+
+# Ignorar configurações de IDE
+.nb-gradle/
+build/
+dist/
+target/
+nbproject/private/
