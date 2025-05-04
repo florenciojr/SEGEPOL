@@ -69,7 +69,7 @@ public class UsuarioDAO {
             stmt.setString(2, usuario.getEmail());
             stmt.setString(3, usuario.getSenha());
             stmt.setString(4, usuario.getCargo());
-            stmt.setString(5, usuario.getContacto());
+            stmt.setString(5, usuario.getTelefone());
             stmt.setString(6, usuario.getStatus());
             stmt.setString(7, usuario.getPerfil());
             stmt.setString(8, usuario.getNumero_identificacao());
@@ -141,7 +141,7 @@ public class UsuarioDAO {
         usuario.setEmail(rs.getString("email"));
         usuario.setSenha(rs.getString("senha"));
         usuario.setCargo(rs.getString("cargo"));
-        usuario.setContacto(rs.getString("telefone"));
+        usuario.setTelefone(rs.getString("telefone"));
         usuario.setStatus(rs.getString("status"));
         usuario.setPerfil(rs.getString("perfil"));
         usuario.setNumero_identificacao(rs.getString("numero_identificacao"));
@@ -225,7 +225,7 @@ public class UsuarioDAO {
             stmt.setString(2, usuario.getEmail());
             stmt.setString(3, usuario.getSenha());
             stmt.setString(4, usuario.getCargo());
-            stmt.setString(5, usuario.getContacto());
+            stmt.setString(5, usuario.getTelefone());
             stmt.setString(6, usuario.getStatus());
             stmt.setString(7, usuario.getPerfil());
             stmt.setString(8, usuario.getNumero_identificacao());

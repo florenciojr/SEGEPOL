@@ -21,46 +21,39 @@ import java.sql.Timestamp;
  *
  * @author JR5
  */
+
+
+import java.sql.Timestamp;
+
 public class Usuario {
     private int id_usuario;
     private String nome;
     private String email;
     private String senha;
-    private String cargo;  // Agente, Investigador, Comandante, Administrador
-    private String contacto;
+    private String cargo; // Agente, Investigador, Comandante, Administrador
+    private String telefone;
     private String foto_perfil;
-    private String status;  // Ativo, Inativo, Suspenso, Férias
+    private String status; // Ativo, Inativo
     private Timestamp data_cadastro;
     private Timestamp data_atualizacao;
-    private String perfil;  // Operacional, Tático, Estratégico, Administrativo
-    private String estado;  // UF do estado
+    private String perfil; // Operacional, Tático, Estratégico, Administrativo
     private String numero_identificacao;
+    private Timestamp ultimo_login;
+    private boolean oculto;
 
-    // Construtor vazio
+    // Construtores
     public Usuario() {
-        this.status = "Ativo"; // Valor padrão
+        this.status = "Ativo";
         this.data_cadastro = new Timestamp(System.currentTimeMillis());
+        this.oculto = false;
     }
 
-    // Construtor com campos básicos
     public Usuario(String nome, String email, String senha, String cargo) {
         this();
         this.nome = nome;
         this.email = email;
         this.senha = senha;
         this.cargo = cargo;
-    }
-    
-    // Construtor completo (opcional)
-    public Usuario(String nome, String email, String senha, String cargo, 
-                  String contacto, String status, String perfil, String estado, 
-                  String numeroIdentificacao) {
-        this(nome, email, senha, cargo);
-        this.contacto = contacto;
-        this.status = status;
-        this.perfil = perfil;
-        this.estado = estado;
-        this.numero_identificacao = numeroIdentificacao;
     }
 
     // Getters e Setters
@@ -104,12 +97,12 @@ public class Usuario {
         this.cargo = cargo;
     }
 
-    public String getContacto() {
-        return contacto;
+    public String getTelefone() {
+        return telefone;
     }
 
-    public void setContacto(String contacto) {
-        this.contacto = contacto;
+    public void setTelefone(String telefone) {
+        this.telefone = telefone;
     }
 
     public String getFoto_perfil() {
@@ -152,14 +145,6 @@ public class Usuario {
         this.perfil = perfil;
     }
 
-    public String getEstado() {
-        return estado;
-    }
-
-    public void setEstado(String estado) {
-        this.estado = estado;
-    }
-
     public String getNumero_identificacao() {
         return numero_identificacao;
     }
@@ -168,7 +153,22 @@ public class Usuario {
         this.numero_identificacao = numero_identificacao;
     }
 
-    // Método toString melhorado
+    public Timestamp getUltimo_login() {
+        return ultimo_login;
+    }
+
+    public void setUltimo_login(Timestamp ultimo_login) {
+        this.ultimo_login = ultimo_login;
+    }
+
+    public boolean isOculto() {
+        return oculto;
+    }
+
+    public void setOculto(boolean oculto) {
+        this.oculto = oculto;
+    }
+
     @Override
     public String toString() {
         return "Usuario{" +
@@ -177,23 +177,10 @@ public class Usuario {
                 ", email='" + email + '\'' +
                 ", cargo='" + cargo + '\'' +
                 ", status='" + status + '\'' +
-                ", perfil='" + perfil + '\'' +
-                ", numId='" + numero_identificacao + '\'' +
-                ", cadastro=" + data_cadastro +
-                (data_atualizacao != null ? ", atualizacao=" + data_atualizacao : "") +
                 '}';
     }
 
-    // Método para verificar se o usuário está ativo
     public boolean isAtivo() {
         return "Ativo".equalsIgnoreCase(this.status);
-    }
-
-    public void setData_criacao(Timestamp timestamp) {
-        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
-    }
-
-    public void setUltimo_login(Timestamp timestamp) {
-        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
     }
 }
