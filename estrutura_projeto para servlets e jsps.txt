@@ -20,7 +20,7 @@
 
 ## 🛠️ Servlets (Controller)
 - [ ] LoginServlet.java
-- [ ] CidadaoServlet.java
+- [✅] CidadaoServlet.java
 - [ ] QueixaServlet.java
 - [ ] PatrulhaServlet.java
 - [ ] MandadoServlet.java
@@ -37,8 +37,8 @@
 - [ ] dashboard.jsp
 
 ### Cidadãos
-- [ ] listar-cidadaos.jsp
-- [ ] cadastrar-cidadao.jsp
+- [✅] listar-cidadaos.jsp
+- [✅] cadastrar-cidadao.jsp
 
 ### Queixas
 - [ ] nova-queixa.jsp
