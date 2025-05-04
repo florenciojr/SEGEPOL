@@ -106,16 +106,16 @@
                                         </div>
                                         <div class="invalid-feedback">Por favor, informe um email válido.</div>
                                     </div>
-                                    
-                                    <div class="col-md-6">
-                                        <label for="telefone" class="form-label">Telefone</label>
-                                        <div class="input-group">
-                                            <span class="input-group-text"><i class="fas fa-phone"></i></span>
-                                            <input type="tel" class="form-control" id="telefone" name="telefone" 
-                                                   value="${usuario.contacto}"
-                                                   placeholder="(00) 00000-0000">
-                                        </div>
-                                    </div>
+                               <div class="col-md-6">
+    <label for="telefone" class="form-label">Telefone</label>
+    <div class="input-group">
+        <span class="input-group-text"><i class="fas fa-phone"></i></span>
+        <input type="text" 
+               name="telefone" 
+               value="${usuario.telefone}"
+               placeholder="(000) 00-000000">
+    </div>
+</div>
                                     
                                     <div class="col-md-6">
                                         <label for="numero_identificacao" class="form-label required-field">Número de Identificação</label>

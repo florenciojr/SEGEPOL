@@ -103,10 +103,10 @@
                                             <p class="detail-value">${usuario.cargo}</p>
                                         </div>
                                         
-                                        <div class="col-md-6">
-                                            <p class="detail-label"><i class="fas fa-phone me-2"></i>Telefone</p>
-                                            <p class="detail-value">${usuario.contacto}</p>
-                                        </div>
+<div class="col-md-6">
+    <p class="detail-label"><i class="fas fa-phone me-2"></i>Telefone</p>
+    <p class="detail-value">${usuario.telefone}</p>  <!-- CORRIGIDO -->
+</div>
                                         
                                         <div class="col-md-6">
                                             <p class="detail-label"><i class="fas fa-user-tag me-2"></i>Perfil</p>
