@@ -18,6 +18,8 @@
         <failOnMissingWebXml>false</failOnMissingWebXml>
     </properties>
     
+    
+    
     <dependencies>
         <!-- Servlet API -->
         <dependency>
@@ -62,6 +64,8 @@
                     <target>${maven.compiler.target}</target>
                 </configuration>
             </plugin>
+            
+            
             
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>

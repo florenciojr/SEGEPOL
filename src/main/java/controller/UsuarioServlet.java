@@ -31,12 +31,14 @@ import java.util.Arrays;
 import java.util.List;
 import java.io.File;
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Enumeration;
 
 @WebServlet(name = "UsuarioServlet", urlPatterns = {"/usuarios"})
 @MultipartConfig(
-    fileSizeThreshold = 1024 * 1024 * 1, // 1MB
-    maxFileSize = 1024 * 1024 * 2,      // 2MB
-    maxRequestSize = 1024 * 1024 * 10   // 10MB
+    fileSizeThreshold = 1024 * 1024 * 1,  // 1MB
+    maxFileSize = 1024 * 1024 * 2,       // 2MB
+    maxRequestSize = 1024 * 1024 * 10    // 10MB
 )
 public class UsuarioServlet extends HttpServlet {
     private UsuarioDAO usuarioDAO;
@@ -54,15 +56,14 @@ public class UsuarioServlet extends HttpServlet {
             String action = request.getParameter("action");
             
             if (action == null) {
-                // Carrega a lista automaticamente (comportamento padrão)
                 listarUsuarios(request, response);
             } else {
                 switch (action) {
                     case "novo":
-                        mostrarFormularioNovoUsuario(request, response);
+                        mostrarFormularioNovo(request, response);
                         break;
                     case "editar":
-                        mostrarFormularioEditarUsuario(request, response);
+                        mostrarFormularioEditar(request, response);
                         break;
                     case "visualizar":
                         visualizarUsuario(request, response);
@@ -70,130 +71,95 @@ public class UsuarioServlet extends HttpServlet {
                     case "desativar":
                         desativarUsuario(request, response);
                         break;
-                    case "reativar":
-                        reativarUsuario(request, response);
+                    case "ativar":
+                        ativarUsuario(request, response);
+                        break;
+                    case "ocultar":
+                        ocultarUsuario(request, response);
+                        break;
+                    case "buscar":
+                        buscarUsuarios(request, response);
                         break;
                     default:
                         listarUsuarios(request, response);
                 }
             }
         } catch (SQLException ex) {
-            throw new ServletException(ex);
+            tratarErro(request, response, "Erro ao processar requisição: " + ex.getMessage());
         }
     }
 
     @Override
-    protected void doPost(HttpServletRequest request, HttpServletResponse response) 
+    protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        String action = request.getParameter("action");
-        
         try {
-            if (action != null) {
-                switch (action) {
-                    case "inserir":
-                        inserirUsuario(request, response);
-                        break;
-                    case "atualizar":
-                        atualizarUsuario(request, response);
-                        break;
-                    default:
-                        listarUsuarios(request, response);
-                }
-            } else {
-                listarUsuarios(request, response);
+            String action = request.getParameter("action");
+            
+            switch (action) {
+                case "inserir":
+                    inserirUsuario(request, response);
+                    break;
+                case "atualizar":
+                    atualizarUsuario(request, response);
+                    break;
+                case "autenticar":
+                    autenticarUsuario(request, response);
+                    break;
+                default:
+                    listarUsuarios(request, response);
             }
         } catch (SQLException ex) {
-            throw new ServletException(ex);
+            tratarErro(request, response, "Erro ao processar requisição: " + ex.getMessage());
         }
     }
 
-    private void listarUsuarios(HttpServletRequest request, HttpServletResponse response) 
+    
+    
+    
+    
+private void listarUsuarios(HttpServletRequest request, HttpServletResponse response)
+        throws SQLException, ServletException, IOException {
+    int pagina = 1;
+    int itensPorPagina = 10;
+    
+    if (request.getParameter("pagina") != null) {
+        pagina = Integer.parseInt(request.getParameter("pagina"));
+    }
+    
+    List<Usuario> listaUsuarios = usuarioDAO.listarUsuarios(pagina, itensPorPagina); // Mude o nome da variável
+    int total = usuarioDAO.contarUsuarios();
+    int totalPaginas = (int) Math.ceil((double) total / itensPorPagina);
+    
+    request.setAttribute("listaUsuarios", listaUsuarios); // Corrija o nome do atributo
+    request.setAttribute("totalPaginas", totalPaginas);
+    request.setAttribute("paginaAtual", pagina);
+    
+    encaminharParaView("/view/usuarios/list.jsp", request, response);
+}
+
+    private void buscarUsuarios(HttpServletRequest request, HttpServletResponse response)
             throws SQLException, ServletException, IOException {
-        int pagina = 1;
-        int itensPorPagina = 10;
+        String termo = request.getParameter("termo");
+        List<Usuario> usuarios = new ArrayList<>();
         
-        if (request.getParameter("pagina") != null) {
-            pagina = Integer.parseInt(request.getParameter("pagina"));
+        if (termo != null && !termo.isEmpty()) {
+            // Busca por nome, email ou número de identificação
+            usuarios = usuarioDAO.buscarUsuariosPorTermo(termo);
         }
         
-        List<Usuario> listaUsuarios = usuarioDAO.listarUsuarios(pagina, itensPorPagina);
-        int totalUsuarios = usuarioDAO.contarUsuarios();
-        int totalPaginas = (int) Math.ceil((double) totalUsuarios / itensPorPagina);
-        
-        request.setAttribute("listaUsuarios", listaUsuarios);
-        request.setAttribute("totalPaginas", totalPaginas);
-        request.setAttribute("paginaAtual", pagina);
-        
-        RequestDispatcher dispatcher = request.getRequestDispatcher("/view/usuarios/listar.jsp");
-        dispatcher.forward(request, response);
+        request.setAttribute("usuarios", usuarios);
+        request.setAttribute("termoBusca", termo);
+        encaminharParaView("/view/usuarios/list.jsp", request, response);
     }
 
-    private void mostrarFormularioNovoUsuario(HttpServletRequest request, HttpServletResponse response) 
+    private void mostrarFormularioNovo(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        request.setAttribute("cargosDisponiveis", UsuarioDAO.CARGOS_DISPONIVEIS);
-        request.setAttribute("perfisDisponiveis", UsuarioDAO.PERFIS_DISPONIVEIS);
-        
-        RequestDispatcher dispatcher = request.getRequestDispatcher("/view/usuarios/formulario.jsp");
-        dispatcher.forward(request, response);
+        carregarDadosFormulario(request);
+        encaminharParaView("/view/usuarios/form.jsp", request, response);
     }
 
-    private void mostrarFormularioEditarUsuario(HttpServletRequest request, HttpServletResponse response) 
+    private void mostrarFormularioEditar(HttpServletRequest request, HttpServletResponse response)
             throws SQLException, ServletException, IOException {
-        int id = Integer.parseInt(request.getParameter("id"));
-        Usuario usuario = usuarioDAO.buscarUsuarioPorId(id);
-        
-        if (usuario != null) {
-            request.setAttribute("usuario", usuario);
-            request.setAttribute("cargosDisponiveis", UsuarioDAO.CARGOS_DISPONIVEIS);
-            request.setAttribute("perfisDisponiveis", UsuarioDAO.PERFIS_DISPONIVEIS);
-            
-            RequestDispatcher dispatcher = request.getRequestDispatcher("/view/usuarios/formulario.jsp");
-            dispatcher.forward(request, response);
-        } else {
-            response.sendRedirect("usuarios?erro=Usuário não encontrado");
-        }
-    }
-
-    private void visualizarUsuario(HttpServletRequest request, HttpServletResponse response) 
-            throws SQLException, ServletException, IOException {
-        int id = Integer.parseInt(request.getParameter("id"));
-        Usuario usuario = usuarioDAO.buscarUsuarioPorId(id);
-        
-        if (usuario != null) {
-            request.setAttribute("usuario", usuario);
-            RequestDispatcher dispatcher = request.getRequestDispatcher("/view/usuarios/visualizar.jsp");
-            dispatcher.forward(request, response);
-        } else {
-            response.sendRedirect("usuarios?erro=Usuário não encontrado");
-        }
-    }
-
-    private void inserirUsuario(HttpServletRequest request, HttpServletResponse response) 
-            throws SQLException, IOException, ServletException {
-        Usuario usuario = new Usuario();
-        preencherUsuarioFromRequest(usuario, request);
-        
-        try {
-            Part filePart = request.getPart("foto_perfil");
-            if (filePart != null && filePart.getSize() > 0) {
-                String fileName = processarUploadFoto(filePart, usuario.getNome());
-                usuario.setFoto_perfil(fileName);
-            }
-            
-            if (usuarioDAO.inserirUsuario(usuario)) {
-                response.sendRedirect("usuarios?sucesso=Usuário cadastrado com sucesso");
-            } else {
-                throw new SQLException("Falha ao inserir usuário");
-            }
-        } catch (SQLException e) {
-            request.setAttribute("erro", "Erro ao cadastrar usuário: " + e.getMessage());
-            request.setAttribute("usuario", usuario);
-            mostrarFormularioNovoUsuario(request, response);
-        }
-    }
-
-    private void atualizarUsuario(HttpServletRequest request, HttpServletResponse response) 
-            throws SQLException, IOException, ServletException {
         int id = Integer.parseInt(request.getParameter("id"));
         Usuario usuario = usuarioDAO.buscarUsuarioPorId(id);
         
@@ -202,32 +168,169 @@ public class UsuarioServlet extends HttpServlet {
             return;
         }
         
-        preencherUsuarioFromRequest(usuario, request);
+        request.setAttribute("usuario", usuario);
+        carregarDadosFormulario(request);
+        encaminharParaView("/view/usuarios/form.jsp", request, response);
+    }
+
+    private void visualizarUsuario(HttpServletRequest request, HttpServletResponse response)
+            throws SQLException, ServletException, IOException {
+        int id = Integer.parseInt(request.getParameter("id"));
+        Usuario usuario = usuarioDAO.buscarUsuarioPorId(id);
         
-        try {
-            Part filePart = request.getPart("foto_perfil");
-            if (filePart != null && filePart.getSize() > 0) {
-                if (usuario.getFoto_perfil() != null && !usuario.getFoto_perfil().isEmpty()) {
-                    usuarioDAO.removerFotoAntiga(usuario.getFoto_perfil(), request.getServletContext());
-                }
-                
-                String fileName = processarUploadFoto(filePart, usuario.getNome());
-                usuario.setFoto_perfil(fileName);
+        if (usuario == null) {
+            response.sendRedirect("usuarios?erro=Usuário não encontrado");
+            return;
+        }
+        
+        request.setAttribute("usuario", usuario);
+        encaminharParaView("/view/usuarios/visualizar.jsp", request, response);
+    }
+
+  private void inserirUsuario(HttpServletRequest request, HttpServletResponse response)
+        throws SQLException, IOException, ServletException {
+    
+    // DEBUG: Verificar parâmetros recebidos
+    System.out.println("DEBUG - Parâmetros recebidos:");
+    Enumeration<String> params = request.getParameterNames();
+    while(params.hasMoreElements()) {
+        String paramName = params.nextElement();
+        System.out.println(paramName + ": " + request.getParameter(paramName));
+    }
+    
+    Usuario usuario = new Usuario();
+    usuario.setNome(request.getParameter("nome"));
+    usuario.setEmail(request.getParameter("email"));
+    usuario.setSenha(request.getParameter("senha")); // Deveria ser hasheada
+    usuario.setCargo(request.getParameter("cargo"));
+    usuario.setTelefone(request.getParameter("telefone"));
+    usuario.setStatus(request.getParameter("status"));
+    usuario.setPerfil(request.getParameter("perfil"));
+    usuario.setNumero_identificacao(request.getParameter("numero_identificacao"));
+    
+    try {
+        // Processar foto se existir
+        Part filePart = request.getPart("foto_perfil");
+        if (filePart != null && filePart.getSize() > 0) {
+            String fileName = processarUploadFoto(filePart, usuario.getNome());
+            usuario.setFoto_perfil(fileName);
+        }
+        
+        // DEBUG
+        System.out.println("DEBUG - Usuário a ser inserido: " + usuario.toString());
+        
+        boolean sucesso = usuarioDAO.inserirUsuario(usuario);
+        
+        if (sucesso) {
+            response.sendRedirect(request.getContextPath() + "/usuarios?sucesso=Usuário cadastrado com sucesso");
+        } else {
+            throw new SQLException("Falha ao inserir usuário");
+        }
+    } catch (SQLException e) {
+        // DEBUG
+        System.err.println("ERRO ao inserir: " + e.getMessage());
+        e.printStackTrace();
+        
+        request.setAttribute("erro", "Erro ao cadastrar: " + e.getMessage());
+        request.setAttribute("usuario", usuario);
+        carregarDadosFormulario(request);
+        mostrarFormularioNovo(request, response);
+    }
+}
+  
+private void atualizarUsuario(HttpServletRequest request, HttpServletResponse response)
+        throws SQLException, IOException, ServletException {
+    
+    // Verifica se o parâmetro id existe e não é nulo
+    String idParam = request.getParameter("id");
+    if (idParam == null || idParam.isEmpty()) {
+        response.sendRedirect(request.getContextPath() + "/usuarios?erro=ID do usuário não fornecido");
+        return;
+    }
+    
+    try {
+        int id = Integer.parseInt(idParam);
+        Usuario usuario = usuarioDAO.buscarUsuarioPorId(id);
+        
+        if (usuario == null) {
+            response.sendRedirect(request.getContextPath() + "/usuarios?erro=Usuário não encontrado");
+            return;
+        }
+   
+        // Atualizar campos
+        usuario.setNome(request.getParameter("nome"));
+        usuario.setEmail(request.getParameter("email"));
+        
+        // Atualizar senha apenas se foi fornecida
+        String senha = request.getParameter("senha");
+        if (senha != null && !senha.isEmpty()) {
+            usuario.setSenha(senha); // Deveria ser hasheada
+        }
+        
+        usuario.setCargo(request.getParameter("cargo"));
+        usuario.setTelefone(request.getParameter("telefone"));
+        usuario.setStatus(request.getParameter("status"));
+        usuario.setPerfil(request.getParameter("perfil"));
+        usuario.setNumero_identificacao(request.getParameter("numero_identificacao"));
+        
+        // Processar foto se existir
+        Part filePart = request.getPart("foto_perfil");
+        if (filePart != null && filePart.getSize() > 0) {
+            // Remove foto antiga se existir
+            if (usuario.getFoto_perfil() != null && !usuario.getFoto_perfil().isEmpty()) {
+                usuarioDAO.removerFotoAntiga(usuario.getFoto_perfil(), getServletContext());
             }
             
-            if (usuarioDAO.atualizarUsuario(usuario)) {
-                response.sendRedirect("usuarios?sucesso=Usuário atualizado com sucesso");
-            } else {
-                throw new SQLException("Falha ao atualizar usuário");
-            }
-        } catch (SQLException e) {
-            request.setAttribute("erro", "Erro ao atualizar usuário: " + e.getMessage());
-            request.setAttribute("usuario", usuario);
-            mostrarFormularioEditarUsuario(request, response);
+            String fileName = processarUploadFoto(filePart, usuario.getNome());
+            usuario.setFoto_perfil(fileName);
+        }
+        
+        // DEBUG
+        System.out.println("DEBUG - Usuário a ser atualizado: " + usuario.toString());
+        
+        boolean sucesso = usuarioDAO.atualizarUsuario(usuario);
+        
+        if (sucesso) {
+            response.sendRedirect(request.getContextPath() + "/usuarios?sucesso=Usuário atualizado com sucesso");
+        } else {
+            throw new SQLException("Falha ao atualizar usuário");
+        }
+    } catch (NumberFormatException e) {
+        response.sendRedirect(request.getContextPath() + "/usuarios?erro=ID inválido");
+    } catch (SQLException e) {
+        // DEBUG
+        System.err.println("ERRO ao atualizar: " + e.getMessage());
+        e.printStackTrace();
+        
+        request.setAttribute("erro", "Erro ao atualizar: " + e.getMessage());
+        Object usuario = null;
+        request.setAttribute("usuario", usuario);
+        carregarDadosFormulario(request);
+        mostrarFormularioEditar(request, response);
+    }
+}
+
+    private void autenticarUsuario(HttpServletRequest request, HttpServletResponse response)
+            throws SQLException, IOException, ServletException {
+        String identificacao = request.getParameter("identificacao");
+        String senha = request.getParameter("senha"); // Senha já deve vir hashada
+        
+        Usuario usuario = usuarioDAO.autenticarUsuario(identificacao, senha);
+        
+        if (usuario != null) {
+            // Criar sessão
+            HttpSession session = request.getSession();
+            session.setAttribute("usuarioLogado", usuario);
+            
+            // Redirecionar conforme perfil
+            redirecionarPorPerfil(usuario.getPerfil(), response);
+        } else {
+            request.setAttribute("erro", "Credenciais inválidas ou usuário inativo");
+            request.getRequestDispatcher("/login.jsp").forward(request, response);
         }
     }
 
-    private void desativarUsuario(HttpServletRequest request, HttpServletResponse response) 
+    private void desativarUsuario(HttpServletRequest request, HttpServletResponse response)
             throws SQLException, IOException {
         int id = Integer.parseInt(request.getParameter("id"));
         
@@ -238,64 +341,173 @@ public class UsuarioServlet extends HttpServlet {
         }
     }
 
-    private void reativarUsuario(HttpServletRequest request, HttpServletResponse response) 
+    private void ativarUsuario(HttpServletRequest request, HttpServletResponse response)
             throws SQLException, IOException {
         int id = Integer.parseInt(request.getParameter("id"));
         
         if (usuarioDAO.reativarUsuario(id)) {
-            response.sendRedirect("usuarios?sucesso=Usuário reativado com sucesso");
+            response.sendRedirect("usuarios?sucesso=Usuário ativado com sucesso");
         } else {
-            response.sendRedirect("usuarios?erro=Falha ao reativar usuário");
+            response.sendRedirect("usuarios?erro=Falha ao ativar usuário");
         }
     }
 
-    private void preencherUsuarioFromRequest(Usuario usuario, HttpServletRequest request) {
+    private void ocultarUsuario(HttpServletRequest request, HttpServletResponse response)
+            throws SQLException, IOException {
+        int id = Integer.parseInt(request.getParameter("id"));
+        boolean oculto = Boolean.parseBoolean(request.getParameter("oculto"));
+        
+        if (usuarioDAO.ocultarUsuario(id, oculto)) {
+            response.sendRedirect("usuarios?sucesso=Usuário " + (oculto ? "ocultado" : "tornado visível") + " com sucesso");
+        } else {
+            response.sendRedirect("usuarios?erro=Falha ao alterar visibilidade do usuário");
+        }
+    }
+
+    // Métodos auxiliares
+    private void carregarDadosFormulario(HttpServletRequest request) {
+        request.setAttribute("cargos", UsuarioDAO.CARGOS_DISPONIVEIS);
+        request.setAttribute("perfis", UsuarioDAO.PERFIS_DISPONIVEIS);
+        request.setAttribute("statusOptions", new String[]{"Ativo", "Inativo"});
+    }
+
+private Usuario criarUsuarioFromRequest(HttpServletRequest request) {
+    Usuario usuario = new Usuario();
+    usuario.setNome(request.getParameter("nome"));
+    usuario.setEmail(request.getParameter("email"));
+    
+    // Hash da senha antes de armazenar
+    String senha = request.getParameter("senha");
+    if (senha != null && !senha.isEmpty()) {
+        String senhaHash = hashSenha(senha); // Implemente este método
+        usuario.setSenha(senhaHash);
+    }
+    
+    usuario.setCargo(request.getParameter("cargo"));
+    usuario.setPerfil(request.getParameter("perfil"));
+    usuario.setStatus(request.getParameter("status"));
+    usuario.setTelefone(request.getParameter("telefone"));
+    usuario.setNumero_identificacao(request.getParameter("numero_identificacao"));
+    usuario.setOculto(false);
+    return usuario;
+}
+
+// Método para hash de senha (adicione na classe)
+private String hashSenha(String senha) {
+    // Implemente um hash seguro (adicione a biblioteca BCrypt ao seu projeto)
+    // Exemplo com BCrypt:
+    // return BCrypt.hashpw(senha, BCrypt.gensalt());
+    
+    // Solução temporária (não recomendada para produção):
+    try {
+        java.security.MessageDigest md = java.security.MessageDigest.getInstance("SHA-256");
+        byte[] hash = md.digest(senha.getBytes("UTF-8"));
+        StringBuilder hexString = new StringBuilder();
+        
+        for (byte b : hash) {
+            String hex = Integer.toHexString(0xff & b);
+            if (hex.length() == 1) hexString.append('0');
+            hexString.append(hex);
+        }
+        
+        return hexString.toString();
+    } catch (Exception e) {
+        throw new RuntimeException("Erro ao gerar hash da senha", e);
+    }
+}
+    private void atualizarUsuarioFromRequest(Usuario usuario, HttpServletRequest request) {
         usuario.setNome(request.getParameter("nome"));
         usuario.setEmail(request.getParameter("email"));
-        usuario.setSenha(request.getParameter("senha"));
+        
+        // Só atualiza a senha se foi fornecida
+        String senha = request.getParameter("senha");
+        if (senha != null && !senha.isEmpty()) {
+            usuario.setSenha(senha);
+        }
+        
         usuario.setCargo(request.getParameter("cargo"));
-        usuario.setNumero_identificacao(request.getParameter("telefone"));
-        usuario.setStatus(request.getParameter("status"));
         usuario.setPerfil(request.getParameter("perfil"));
+        usuario.setStatus(request.getParameter("status"));
+        usuario.setTelefone(request.getParameter("telefone"));
         usuario.setNumero_identificacao(request.getParameter("numero_identificacao"));
         
-        if (request.getParameter("id") != null) {
-            usuario.setId_usuario(Integer.parseInt(request.getParameter("id")));
+        if (request.getParameter("oculto") != null) {
+            usuario.setOculto(Boolean.parseBoolean(request.getParameter("oculto")));
         }
     }
 
-    private String processarUploadFoto(Part filePart, String nomeUsuario) throws IOException {
-        if (filePart == null || filePart.getSize() == 0) {
-            return null;
-        }
+    private void processarFotoPerfil(HttpServletRequest request, Usuario usuario)
+            throws IOException, ServletException {
+        Part filePart = request.getPart("foto_perfil");
         
+        if (filePart != null && filePart.getSize() > 0) {
+            // Remove foto antiga se existir
+            if (usuario.getFoto_perfil() != null && !usuario.getFoto_perfil().isEmpty()) {
+                usuarioDAO.removerFotoAntiga(usuario.getFoto_perfil(), getServletContext());
+            }
+            
+            // Processa novo upload
+            String fileName = processarUploadFoto(filePart, usuario.getNome());
+            usuario.setFoto_perfil(fileName);
+        }
+    }
+
+    private String processarUploadFoto(Part filePart, String prefixoNome) throws IOException {
         String fileName = Paths.get(filePart.getSubmittedFileName()).getFileName().toString();
         String fileExtension = fileName.substring(fileName.lastIndexOf(".")).toLowerCase();
         
+        // Valida extensão
         if (!Arrays.asList(UsuarioDAO.EXTENSOES_PERMITIDAS).contains(fileExtension)) {
-            throw new IOException("Extensão não permitida. Use: " + Arrays.toString(UsuarioDAO.EXTENSOES_PERMITIDAS));
+            throw new IOException("Extensão de arquivo não permitida");
         }
         
+        // Valida tamanho
         if (filePart.getSize() > UsuarioDAO.MAX_FOTO_SIZE_KB * 1024) {
-            throw new IOException("Tamanho máximo excedido (" + UsuarioDAO.MAX_FOTO_SIZE_KB + "KB)");
+            throw new IOException("Tamanho do arquivo excede o limite permitido");
         }
         
+        // Cria diretório se não existir
         String uploadDirPath = getServletContext().getRealPath("") + File.separator + UsuarioDAO.UPLOAD_DIR;
-        File uploadDir = new File(uploadDirPath);
-        if (!uploadDir.exists()) {
-            boolean dirCreated = uploadDir.mkdirs();
-            if (!dirCreated) {
-                throw new IOException("Não foi possível criar o diretório de upload: " + uploadDirPath);
-            }
-        }
+        Files.createDirectories(Paths.get(uploadDirPath));
         
-        String novoNome = "user_" + System.currentTimeMillis() + fileExtension;
+        // Gera nome único para o arquivo
+        String novoNome = prefixoNome.replaceAll("[^a-zA-Z0-9]", "_") + "_" + 
+                         System.currentTimeMillis() + fileExtension;
         String filePath = uploadDirPath + File.separator + novoNome;
         
+        // Salva o arquivo
         try (InputStream fileContent = filePart.getInputStream()) {
             Files.copy(fileContent, Paths.get(filePath), StandardCopyOption.REPLACE_EXISTING);
         }
         
         return UsuarioDAO.UPLOAD_DIR + "/" + novoNome;
+    }
+
+    private void redirecionarPorPerfil(String perfil, HttpServletResponse response) throws IOException {
+        switch (perfil) {
+            case "Comando":
+                response.sendRedirect("dashboard-comando.jsp");
+                break;
+            case "Super Admin":
+                response.sendRedirect("dashboard-admin.jsp");
+                break;
+            case "Operacional":
+                response.sendRedirect("dashboard-operacional.jsp");
+                break;
+            default:
+                response.sendRedirect("dashboard.jsp");
+        }
+    }
+
+    private void encaminharParaView(String view, HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        RequestDispatcher dispatcher = request.getRequestDispatcher(view);
+        dispatcher.forward(request, response);
+    }
+
+    private void tratarErro(HttpServletRequest request, HttpServletResponse response, String mensagem)
+            throws ServletException, IOException {
+        request.setAttribute("erro", mensagem);
+        encaminharParaView("/view/erro.jsp", request, response);
     }
 }
