@@ -134,7 +134,7 @@ private void listarUsuarios(HttpServletRequest request, HttpServletResponse resp
     request.setAttribute("totalPaginas", totalPaginas);
     request.setAttribute("paginaAtual", pagina);
     
-    encaminharParaView("/view/usuarios/list.jsp", request, response);
+    encaminharParaView("/WEB-INF/views/usuarios/listUsuario.jsp", request, response);
 }
 
     private void buscarUsuarios(HttpServletRequest request, HttpServletResponse response)
@@ -149,13 +149,13 @@ private void listarUsuarios(HttpServletRequest request, HttpServletResponse resp
         
         request.setAttribute("usuarios", usuarios);
         request.setAttribute("termoBusca", termo);
-        encaminharParaView("/view/usuarios/list.jsp", request, response);
+        encaminharParaView("/WEB-INF/views/usuarios/listUsuario.jsp", request, response);
     }
 
     private void mostrarFormularioNovo(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         carregarDadosFormulario(request);
-        encaminharParaView("/view/usuarios/form.jsp", request, response);
+        encaminharParaView("/WEB-INF/views/usuarios/formUsuario.jsp", request, response);
     }
 
     private void mostrarFormularioEditar(HttpServletRequest request, HttpServletResponse response)
@@ -170,7 +170,7 @@ private void listarUsuarios(HttpServletRequest request, HttpServletResponse resp
         
         request.setAttribute("usuario", usuario);
         carregarDadosFormulario(request);
-        encaminharParaView("/view/usuarios/form.jsp", request, response);
+        encaminharParaView("/WEB-INF/views/usuarios/formUsuario.jsp", request, response);
     }
 
     private void visualizarUsuario(HttpServletRequest request, HttpServletResponse response)
@@ -184,7 +184,7 @@ private void listarUsuarios(HttpServletRequest request, HttpServletResponse resp
         }
         
         request.setAttribute("usuario", usuario);
-        encaminharParaView("/view/usuarios/visualizar.jsp", request, response);
+        encaminharParaView("/WEB-INF/views/usuarios/visualizarUsuario.jsp", request, response);
     }
 
   private void inserirUsuario(HttpServletRequest request, HttpServletResponse response)
@@ -241,22 +241,15 @@ private void listarUsuarios(HttpServletRequest request, HttpServletResponse resp
 private void atualizarUsuario(HttpServletRequest request, HttpServletResponse response)
         throws SQLException, IOException, ServletException {
     
-    // Verifica se o parâmetro id existe e não é nulo
-    String idParam = request.getParameter("id");
-    if (idParam == null || idParam.isEmpty()) {
-        response.sendRedirect(request.getContextPath() + "/usuarios?erro=ID do usuário não fornecido");
+    int id = Integer.parseInt(request.getParameter("id"));
+    Usuario usuario = usuarioDAO.buscarUsuarioPorId(id);
+    
+    if (usuario == null) {
+        response.sendRedirect(request.getContextPath() + "/usuarios?erro=Usuário não encontrado");
         return;
     }
-    
+
     try {
-        int id = Integer.parseInt(idParam);
-        Usuario usuario = usuarioDAO.buscarUsuarioPorId(id);
-        
-        if (usuario == null) {
-            response.sendRedirect(request.getContextPath() + "/usuarios?erro=Usuário não encontrado");
-            return;
-        }
-   
         // Atualizar campos
         usuario.setNome(request.getParameter("nome"));
         usuario.setEmail(request.getParameter("email"));
@@ -264,7 +257,7 @@ private void atualizarUsuario(HttpServletRequest request, HttpServletResponse re
         // Atualizar senha apenas se foi fornecida
         String senha = request.getParameter("senha");
         if (senha != null && !senha.isEmpty()) {
-            usuario.setSenha(senha); // Deveria ser hasheada
+            usuario.setSenha(hashSenha(senha));
         }
         
         usuario.setCargo(request.getParameter("cargo"));
@@ -285,28 +278,21 @@ private void atualizarUsuario(HttpServletRequest request, HttpServletResponse re
             usuario.setFoto_perfil(fileName);
         }
         
-        // DEBUG
-        System.out.println("DEBUG - Usuário a ser atualizado: " + usuario.toString());
-        
         boolean sucesso = usuarioDAO.atualizarUsuario(usuario);
         
         if (sucesso) {
-            response.sendRedirect(request.getContextPath() + "/usuarios?sucesso=Usuário atualizado com sucesso");
+            // Redireciona para a visualização do usuário atualizado
+            response.sendRedirect(request.getContextPath() + "/usuarios?action=visualizar&id=" + usuario.getId_usuario() + "&sucesso=Usuário atualizado com sucesso");
         } else {
-            throw new SQLException("Falha ao atualizar usuário");
+            throw new SQLException("Falha ao atualizar usuário no banco de dados");
         }
-    } catch (NumberFormatException e) {
-        response.sendRedirect(request.getContextPath() + "/usuarios?erro=ID inválido");
-    } catch (SQLException e) {
-        // DEBUG
-        System.err.println("ERRO ao atualizar: " + e.getMessage());
-        e.printStackTrace();
         
+    } catch (Exception e) {
+        // Em caso de erro, mantém na página de edição com os dados preenchidos
         request.setAttribute("erro", "Erro ao atualizar: " + e.getMessage());
-        Object usuario = null;
         request.setAttribute("usuario", usuario);
         carregarDadosFormulario(request);
-        mostrarFormularioEditar(request, response);
+        request.getRequestDispatcher("/WEB-INF/views/usuarios/formUsuario.jsp").forward(request, response);
     }
 }
 
@@ -501,6 +487,11 @@ private String hashSenha(String senha) {
 
     private void encaminharParaView(String view, HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+            System.out.println("[DEBUG] Encaminhando para: " + view);
+    String realPath = getServletContext().getRealPath(view);
+    System.out.println("[DEBUG] Caminho real: " + realPath);
+        
+        
         RequestDispatcher dispatcher = request.getRequestDispatcher(view);
         dispatcher.forward(request, response);
     }

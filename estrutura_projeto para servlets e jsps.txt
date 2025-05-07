@@ -64,6 +64,13 @@
 ### Admin
 - [ ] gerenciar-usuarios.jsp
 
+
+/WEB-INF/view/templates/
+├── header.jsp
+├── footer.jsp
+└── menu.jsp
+
+
 ## ⚙️ Funcionalidades Interativas
 - [ ] Filtros dinâmicos com AJAX
 - [ ] Upload de arquivos (provas)

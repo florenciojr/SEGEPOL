@@ -4,13 +4,6 @@
  */
 package controller;
 
-import java.io.IOException;
-import java.io.PrintWriter;
-import javax.servlet.ServletException;
-import javax.servlet.annotation.WebServlet;
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 /**
  *
@@ -88,12 +81,12 @@ public class CidadaoServlet extends HttpServlet {
     private void listarCidadaos(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         request.setAttribute("cidadaos", cidadaoDAO.listarCidadaos());
-        request.getRequestDispatcher("/view/cidadaos/listarCidadaos.jsp").forward(request, response);
+        request.getRequestDispatcher("/WEB-INF/views/cidadaos/listarCidadaos.jsp").forward(request, response);
     }
 
     private void mostrarFormulario(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        request.getRequestDispatcher("/view/cidadaos/formCidadao.jsp").forward(request, response);
+        request.getRequestDispatcher("/WEB-INF/views/cidadaos/formCidadao.jsp").forward(request, response);
     }
 
     private void editarCidadao(HttpServletRequest request, HttpServletResponse response)
@@ -101,7 +94,7 @@ public class CidadaoServlet extends HttpServlet {
         int id = Integer.parseInt(request.getParameter("id"));
         Cidadao cidadao = cidadaoDAO.buscarCidadaoPorId(id);
         request.setAttribute("cidadao", cidadao);
-        request.getRequestDispatcher("/view/cidadaos/formCidadao.jsp").forward(request, response);
+        request.getRequestDispatcher("/WEB-INF/views/cidadaos/formCidadao.jsp").forward(request, response);
     }
 
     private void salvarCidadao(HttpServletRequest request, HttpServletResponse response)
@@ -131,7 +124,7 @@ public class CidadaoServlet extends HttpServlet {
         String documento = request.getParameter("documento");
         Cidadao cidadao = cidadaoDAO.buscarCidadaoPorDocumento(documento);
         request.setAttribute("cidadao", cidadao);
-        request.getRequestDispatcher("/view/cidadaos/detalhesCidadao.jsp").forward(request, response);
+        request.getRequestDispatcher("/WEB-INF/views/cidadaos/detalhesCidadao.jsp").forward(request, response);
     }
 
     private Cidadao criarCidadaoAPartirRequest(HttpServletRequest request) {
