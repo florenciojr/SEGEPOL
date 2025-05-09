@@ -30,33 +30,35 @@ public class Usuario {
     private String nome;
     private String email;
     private String senha;
-    private String cargo; // Agente, Investigador, Comandante, Administrador
+    private String cargo;
     private String telefone;
     private String foto_perfil;
-    private String status; // Ativo, Inativo
+    private String status;
     private Timestamp data_cadastro;
-    private Timestamp data_atualizacao;
-    private String perfil; // Operacional, Tático, Estratégico, Administrativo
+    private String perfil;
     private String numero_identificacao;
+    private Timestamp data_atualizacao;
     private Timestamp ultimo_login;
+    private String ip_ultimo_login;
     private boolean oculto;
 
-    // Construtores
+    // Construtor padrão
     public Usuario() {
-        this.status = "Ativo";
-        this.data_cadastro = new Timestamp(System.currentTimeMillis());
-        this.oculto = false;
     }
 
-    public Usuario(String nome, String email, String senha, String cargo) {
-        this();
+    // Construtor com campos básicos
+    public Usuario(String nome, String email, String senha, String cargo, String perfil, String numero_identificacao) {
         this.nome = nome;
         this.email = email;
         this.senha = senha;
         this.cargo = cargo;
+        this.perfil = perfil;
+        this.numero_identificacao = numero_identificacao;
+        this.status = "Ativo"; // Valor padrão
     }
 
-    // Getters e Setters
+    // Getters e Setters para todos os campos
+
     public int getId_usuario() {
         return id_usuario;
     }
@@ -129,14 +131,6 @@ public class Usuario {
         this.data_cadastro = data_cadastro;
     }
 
-    public Timestamp getData_atualizacao() {
-        return data_atualizacao;
-    }
-
-    public void setData_atualizacao(Timestamp data_atualizacao) {
-        this.data_atualizacao = data_atualizacao;
-    }
-
     public String getPerfil() {
         return perfil;
     }
@@ -153,12 +147,28 @@ public class Usuario {
         this.numero_identificacao = numero_identificacao;
     }
 
+    public Timestamp getData_atualizacao() {
+        return data_atualizacao;
+    }
+
+    public void setData_atualizacao(Timestamp data_atualizacao) {
+        this.data_atualizacao = data_atualizacao;
+    }
+
     public Timestamp getUltimo_login() {
         return ultimo_login;
     }
 
     public void setUltimo_login(Timestamp ultimo_login) {
         this.ultimo_login = ultimo_login;
+    }
+
+    public String getIp_ultimo_login() {
+        return ip_ultimo_login;
+    }
+
+    public void setIp_ultimo_login(String ip_ultimo_login) {
+        this.ip_ultimo_login = ip_ultimo_login;
     }
 
     public boolean isOculto() {
@@ -169,18 +179,33 @@ public class Usuario {
         this.oculto = oculto;
     }
 
+    // Método toString para facilitar a visualização
     @Override
     public String toString() {
         return "Usuario{" +
-                "id=" + id_usuario +
+                "id_usuario=" + id_usuario +
                 ", nome='" + nome + '\'' +
                 ", email='" + email + '\'' +
                 ", cargo='" + cargo + '\'' +
+                ", perfil='" + perfil + '\'' +
                 ", status='" + status + '\'' +
+                ", numero_identificacao='" + numero_identificacao + '\'' +
+                ", ultimo_login=" + ultimo_login +
                 '}';
     }
 
+    // Métodos auxiliares de negócio
     public boolean isAtivo() {
         return "Ativo".equalsIgnoreCase(this.status);
+    }
+
+    public boolean isAdministrador() {
+        return "Administrador".equalsIgnoreCase(this.cargo) || 
+               "Super Admin".equalsIgnoreCase(this.perfil);
+    }
+
+    public boolean podeGerenciarUsuarios() {
+        return isAdministrador() || 
+               "Chefe de gestor de pessoal".equalsIgnoreCase(this.cargo);
     }
 }

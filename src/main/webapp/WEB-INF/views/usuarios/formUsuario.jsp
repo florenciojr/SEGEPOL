@@ -1,6 +1,6 @@
 <%-- 
-    Document   : formulario
-    Created on : 2 de mai de 2025, 19:14:55
+    Document   : formUsuario
+    Created on : 2 de mai. de 2025, 14:30:00
     Author     : JR5
 --%>
 
@@ -11,19 +11,19 @@
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>${usuario == null ? 'Cadastrar' : 'Editar'} Usuário | SIGEPOL</title>
-    <%@include file="/WEB-INF/views/templates/header.jsp" %>
+    <title>${empty usuario ? 'Cadastrar' : 'Editar'} Usuário | SIGEPOL</title>
+       <%@include file="/WEB-INF/views/templates/header.jsp" %>
     <style>
         :root {
-            --police-blue: #0d47a1;
+            --police-primary: #0d47a1;
             --police-dark: #002171;
             --police-light: #e3f2fd;
             --police-accent: #ffab00;
-            --police-gray: #455a64;
+            --police-danger: #dc3545;
         }
         
         .form-container {
-            max-width: 900px;
+            max-width: 800px;
             margin: 2rem auto;
         }
         
@@ -34,7 +34,7 @@
         }
         
         .card-header-form {
-            background: linear-gradient(135deg, var(--police-dark), var(--police-blue));
+            background: linear-gradient(135deg, var(--police-dark), var(--police-primary));
             color: white;
             padding: 1.25rem 1.5rem;
             border-bottom: 3px solid var(--police-accent);
@@ -45,6 +45,8 @@
             height: 150px;
             margin: 0 auto 1.5rem;
             position: relative;
+            border-radius: 50%;
+            background-color: var(--police-light);
         }
         
         .photo-preview {
@@ -52,14 +54,14 @@
             height: 100%;
             border-radius: 50%;
             object-fit: cover;
-            border: 3px solid var(--police-light);
+            border: 3px solid white;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
         }
         
         .photo-upload {
             position: absolute;
-            bottom: 0;
-            right: 0;
+            bottom: 10px;
+            right: 10px;
             background-color: var(--police-accent);
             color: white;
             width: 36px;
@@ -69,6 +71,7 @@
             align-items: center;
             justify-content: center;
             cursor: pointer;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
         }
         
         .form-section {
@@ -76,47 +79,29 @@
             border-radius: 6px;
             padding: 1.5rem;
             margin-bottom: 1.5rem;
-            border-left: 4px solid var(--police-blue);
+            border-left: 4px solid var(--police-primary);
         }
         
         .section-title {
-            color: var(--police-blue);
+            color: var(--police-primary);
             font-weight: 600;
             margin-bottom: 1.25rem;
             padding-bottom: 0.5rem;
             border-bottom: 1px solid #eee;
         }
         
-        .form-label {
-            font-weight: 500;
-            color: var(--police-gray);
-            margin-bottom: 0.5rem;
-        }
-        
-        .required-field::after {
+        .required-label::after {
             content: " *";
-            color: #dc3545;
-        }
-        
-        .form-control, .form-select {
-            border-radius: 4px;
-            padding: 0.5rem 0.75rem;
-            border: 1px solid #ced4da;
+            color: var(--police-danger);
         }
         
         .form-control:focus, .form-select:focus {
-            border-color: var(--police-blue);
+            border-color: var(--police-primary);
             box-shadow: 0 0 0 0.25rem rgba(13, 71, 161, 0.25);
         }
         
-        .input-group-text {
-            background-color: var(--police-light);
-            color: var(--police-blue);
-            border: 1px solid #ced4da;
-        }
-        
         .btn-police {
-            background-color: var(--police-blue);
+            background-color: var(--police-primary);
             color: white;
             border: none;
             padding: 0.5rem 1.5rem;
@@ -130,8 +115,8 @@
         }
         
         .btn-outline-police {
-            border: 1px solid var(--police-blue);
-            color: var(--police-blue);
+            border: 1px solid var(--police-primary);
+            color: var(--police-primary);
             background-color: transparent;
         }
         
@@ -145,19 +130,19 @@
         }
         
         .password-toggle:hover {
-            color: var(--police-blue);
+            color: var(--police-primary);
         }
     </style>
 </head>
 <body>
-    <%@include file="/WEB-INF/views/templates/navbar.jsp" %>
+    <%@include file="../templates/navbar.jsp" %>
     
     <main class="container form-container">
         <div class="card card-form">
             <div class="card-header card-header-form">
                 <h2 class="h5 mb-0">
-                    <i class="fas ${usuario == null ? 'fa-user-plus' : 'fa-user-edit'} me-2"></i>
-                    ${usuario == null ? 'CADASTRAR NOVO USUÁRIO' : 'EDITAR USUÁRIO'}
+                    <i class="fas ${empty usuario ? 'fa-user-plus' : 'fa-user-edit'} me-2"></i>
+                    ${empty usuario ? 'CADASTRAR NOVO USUÁRIO' : 'EDITAR USUÁRIO'}
                 </h2>
             </div>
             
@@ -170,7 +155,7 @@
                 </c:if>
                 
                 <form action="${pageContext.request.contextPath}/usuarios" method="post" enctype="multipart/form-data">
-                    <input type="hidden" name="action" value="${usuario == null ? 'inserir' : 'atualizar'}">
+                    <input type="hidden" name="action" value="${empty usuario ? 'inserir' : 'atualizar'}">
                     <c:if test="${not empty usuario}">
                         <input type="hidden" name="id" value="${usuario.id_usuario}">
                     </c:if>
@@ -180,7 +165,7 @@
                         <div class="photo-container">
                             <img id="photoPreview" 
                                  src="${not empty usuario.foto_perfil ? 
-                                       pageContext.request.contextPath.concat('/uploads/').concat(usuario.foto_perfil) : 
+                                       pageContext.request.contextPath.concat('/').concat(usuario.foto_perfil) : 
                                        'https://via.placeholder.com/150?text=Sem+Foto'}" 
                                  class="photo-preview">
                             <label for="foto_perfil" class="photo-upload">
@@ -198,31 +183,31 @@
                         
                         <div class="row g-3">
                             <div class="col-md-6">
-                                <label class="form-label required-field">Nome Completo</label>
-                                <input type="text" class="form-control" name="nome" 
+                                <label for="nome" class="form-label required-label">Nome Completo</label>
+                                <input type="text" class="form-control" id="nome" name="nome" 
                                        value="${usuario.nome}" required>
                             </div>
                             
                             <div class="col-md-6">
-                                <label class="form-label required-field">Nº Identificação</label>
-                                <input type="text" class="form-control" name="numero_identificacao" 
+                                <label for="numero_identificacao" class="form-label required-label">Nº Identificação</label>
+                                <input type="text" class="form-control" id="numero_identificacao" name="numero_identificacao" 
                                        value="${usuario.numero_identificacao}" required>
                             </div>
                             
                             <div class="col-md-6">
-                                <label class="form-label required-field">Email</label>
+                                <label for="email" class="form-label required-label">Email</label>
                                 <div class="input-group">
                                     <span class="input-group-text"><i class="fas fa-envelope"></i></span>
-                                    <input type="email" class="form-control" name="email" 
+                                    <input type="email" class="form-control" id="email" name="email" 
                                            value="${usuario.email}" required>
                                 </div>
                             </div>
                             
                             <div class="col-md-6">
-                                <label class="form-label">Telefone</label>
+                                <label for="telefone" class="form-label">Telefone</label>
                                 <div class="input-group">
                                     <span class="input-group-text"><i class="fas fa-phone"></i></span>
-                                    <input type="text" class="form-control" name="telefone" 
+                                    <input type="tel" class="form-control" id="telefone" name="telefone" 
                                            value="${usuario.telefone}">
                                 </div>
                             </div>
@@ -237,28 +222,28 @@
                         
                         <div class="row g-3">
                             <div class="col-md-6">
-                                <label class="form-label ${usuario == null ? 'required-field' : ''}">
-                                    ${usuario == null ? 'Senha' : 'Nova Senha'}
+                                <label for="senha" class="form-label ${empty usuario ? 'required-label' : ''}">
+                                    ${empty usuario ? 'Senha' : 'Nova Senha'}
                                 </label>
                                 <div class="input-group">
                                     <input type="password" class="form-control" id="senha" 
-                                           name="senha" ${usuario == null ? 'required' : ''}>
+                                           name="senha" ${empty usuario ? 'required' : ''}>
                                     <span class="input-group-text password-toggle" id="toggleSenha">
                                         <i class="fas fa-eye"></i>
                                     </span>
                                 </div>
-                                <c:if test="${usuario != null}">
+                                <c:if test="${not empty usuario}">
                                     <small class="text-muted">Deixe em branco para manter a senha atual</small>
                                 </c:if>
                             </div>
                             
                             <div class="col-md-6">
-                                <label class="form-label ${usuario == null ? 'required-field' : ''}">
+                                <label for="confirmar_senha" class="form-label ${empty usuario ? 'required-label' : ''}">
                                     Confirmar Senha
                                 </label>
                                 <div class="input-group">
                                     <input type="password" class="form-control" id="confirmar_senha" 
-                                           ${usuario == null ? 'required' : ''}>
+                                           ${empty usuario ? 'required' : ''}>
                                     <span class="input-group-text password-toggle" id="toggleConfirmar">
                                         <i class="fas fa-eye"></i>
                                     </span>
@@ -275,35 +260,35 @@
                         
                         <div class="row g-3">
                             <div class="col-md-4">
-                                <label class="form-label required-field">Cargo</label>
-                                <select class="form-select" name="cargo" required>
+                                <label for="cargo" class="form-label required-label">Cargo</label>
+                                <select class="form-select" id="cargo" name="cargo" required>
                                     <option value="">Selecione...</option>
                                     <c:forEach items="${cargos}" var="cargo">
-                                        <option value="${cargo}" ${usuario.cargo eq cargo ? 'selected' : ''}>
-                                            ${cargo}
+                                        <option value="${cargo}" ${usuario.cargo eq cargo.descricao ? 'selected' : ''}>
+                                            ${cargo.descricao}
                                         </option>
                                     </c:forEach>
                                 </select>
                             </div>
                             
                             <div class="col-md-4">
-                                <label class="form-label required-field">Perfil</label>
-                                <select class="form-select" name="perfil" required>
+                                <label for="perfil" class="form-label required-label">Perfil</label>
+                                <select class="form-select" id="perfil" name="perfil" required>
                                     <option value="">Selecione...</option>
                                     <c:forEach items="${perfis}" var="perfil">
-                                        <option value="${perfil}" ${usuario.perfil eq perfil ? 'selected' : ''}>
-                                            ${perfil}
+                                        <option value="${perfil}" ${usuario.perfil eq perfil.descricao ? 'selected' : ''}>
+                                            ${perfil.descricao}
                                         </option>
                                     </c:forEach>
                                 </select>
                             </div>
                             
                             <div class="col-md-4">
-                                <label class="form-label required-field">Status</label>
-                                <select class="form-select" name="status" required>
+                                <label for="status" class="form-label required-label">Status</label>
+                                <select class="form-select" id="status" name="status" required>
                                     <c:forEach items="${statusOptions}" var="status">
-                                        <option value="${status}" ${usuario.status eq status ? 'selected' : ''}>
-                                            ${status}
+                                        <option value="${status.descricao}" ${usuario.status eq status.descricao ? 'selected' : ''}>
+                                            ${status.descricao}
                                         </option>
                                     </c:forEach>
                                 </select>
@@ -326,7 +311,7 @@
         </div>
     </main>
 
-    <%@include file="/WEB-INF/views/templates/footer.jsp" %>
+     <%@include file="/WEB-INF/views/templates/footer.jsp" %>
 
     <!-- Scripts -->
     <script>

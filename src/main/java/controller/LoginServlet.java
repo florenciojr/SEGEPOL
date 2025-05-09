@@ -57,9 +57,10 @@ public class LoginServlet extends HttpServlet {
             throws ServletException, IOException {
         String identificacao = request.getParameter("identificacao");
         String senha = request.getParameter("senha");
-        
+        String ip = request.getRemoteAddr();
+
         try {
-            Usuario usuario = usuarioDAO.autenticarUsuario(identificacao, senha);
+            Usuario usuario = usuarioDAO.autenticarUsuario(identificacao, senha,ip);
             
             if (usuario != null) {
                 if (!"ativo".equalsIgnoreCase(usuario.getStatus())) {

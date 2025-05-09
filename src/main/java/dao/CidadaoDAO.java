@@ -172,10 +172,9 @@ public class CidadaoDAO {
         }
     }
     
-}
 
 
-/*    public static void main(String[] args) {
+ public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
         CidadaoDAO cidadaoDAO = new CidadaoDAO();
 
@@ -371,7 +370,7 @@ public class CidadaoDAO {
 }
 
 
-*/
+
 
 
 

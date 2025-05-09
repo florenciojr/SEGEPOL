@@ -11,6 +11,7 @@
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     <title>Lista de Cidadãos</title>
+   <%@include file="/WEB-INF/views/templates/header.jsp" %>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -142,7 +143,11 @@
                     </tr>
                 </c:if>
             </tbody>
+
+
         </table>
     </div>
+<%@include file="/WEB-INF/views/templates/footer.jsp" %>
 </body>
+
 </html>
