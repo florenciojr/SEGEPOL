@@ -58,10 +58,9 @@
                 <td>Status</td>
                 <td>${usuarioLogado.status}</td>
             </tr>
-            
             <tr>
-                <td>cargo</td>
-                <td>${usuarioLogado.estado}</td>
+                <td>Cargo</td>
+                <td>${usuarioLogado.cargo}</td>
             </tr>
         </table>
     </div>
@@ -69,6 +68,6 @@
     <h3>Debug Completo:</h3>
     <pre>${usuarioLogado}</pre>
     
-    <a href="logout">Sair</a>
+    <a href="${pageContext.request.contextPath}/logout">Sair</a>
 </body>
 </html>

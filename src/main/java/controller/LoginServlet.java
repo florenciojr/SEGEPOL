@@ -19,6 +19,7 @@ import javax.servlet.http.HttpServletResponse;
 
 
 
+
 import dao.UsuarioDAO;
 import model.Usuario;
 import javax.servlet.*;
@@ -27,125 +28,188 @@ import javax.servlet.annotation.*;
 import java.io.IOException;
 import java.sql.SQLException;
 
-
-
 @WebServlet(name = "LoginServlet", urlPatterns = {"/login"})
 public class LoginServlet extends HttpServlet {
     private UsuarioDAO usuarioDAO;
+    
+    // Constantes para caminhos e mensagens
+    private static final String LOGIN_PAGE = "/WEB-INF/views/login/login.jsp";
+    private static final String TEST_PAGE = "/WEB-INF/views/testpage.jsp";
+    private static final String ERRO_SERVIDOR = "Ocorreu um erro no servidor. Por favor, tente novamente mais tarde.";
+    private static final String CONTA_INATIVA = "Sua conta está desativada. Entre em contato com o administrador.";
+    private static final String CREDENCIAIS_INVALIDAS = "Credenciais inválidas. Verifique seus dados e tente novamente.";
 
     @Override
     public void init() throws ServletException {
         super.init();
-        usuarioDAO = new UsuarioDAO();
+        this.usuarioDAO = new UsuarioDAO();
     }
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) 
             throws ServletException, IOException {
-        HttpSession session = request.getSession(false);
-        if (session != null && session.getAttribute("usuarioLogado") != null) {
-            // Usuário já logado, redireciona para página inicial
-            redirecionarPorCargo((Usuario) session.getAttribute("usuarioLogado"), request, response);
+        
+        if (isUsuarioLogado(request)) {
+            redirecionarPorPerfil(request, response);
             return;
         }
-        // Mostra a página de login
-        request.getRequestDispatcher("/view/login/login.jsp").forward(request, response);
+        
+        exibirPaginaLogin(request, response, null);
     }
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) 
             throws ServletException, IOException {
+        
         String identificacao = request.getParameter("identificacao");
         String senha = request.getParameter("senha");
-        String ip = request.getRemoteAddr();
-
+        
+        if (!validarCampos(identificacao, senha)) {
+            exibirPaginaLogin(request, response, "Por favor, preencha todos os campos corretamente.");
+            return;
+        }
+        
         try {
-            Usuario usuario = usuarioDAO.autenticarUsuario(identificacao, senha,ip);
+            Usuario usuario = usuarioDAO.autenticarUsuario(
+                identificacao.trim(), 
+                senha, 
+                request.getRemoteAddr()
+            );
             
-            if (usuario != null) {
-                if (!"ativo".equalsIgnoreCase(usuario.getStatus())) {
-                    request.setAttribute("erro", "Sua conta está desativada");
-                    request.getRequestDispatcher("/view/login/login.jsp").forward(request, response);
-                    return;
-                }
-                
-                HttpSession session = request.getSession();
-                session.setAttribute("usuarioLogado", usuario);
-                
-                // Debug seguro
-                logDebugInfo(usuario);
-                
-                // Redireciona conforme o cargo
-                redirecionarPorCargo(usuario, request, response);
-                return;
-            } else {
-                request.setAttribute("erro", "Credenciais inválidas");
-                request.getRequestDispatcher("/view/login/login.jsp").forward(request, response);
+            if (usuario == null) {
+                exibirPaginaLogin(request, response, CREDENCIAIS_INVALIDAS);
                 return;
             }
+            
+            if (!"ativo".equalsIgnoreCase(usuario.getStatus())) {
+                exibirPaginaLogin(request, response, CONTA_INATIVA);
+                return;
+            }
+            
+            criarSessaoUsuario(request, usuario);
+            logAcesso(usuario, request);
+            redirecionarPorPerfil(request, response);
+            
         } catch (SQLException e) {
-            request.setAttribute("erro", "Erro no servidor");
-            request.getRequestDispatcher("/view/login/login.jsp").forward(request, response);
+            logError("Erro durante autenticação", e);
+            exibirPaginaLogin(request, response, ERRO_SERVIDOR);
         }
     }
 
-    /**
-     * MÉTODO PARA REDIRECIONAMENTO POR CARGO (IMPLEMENTE NO FUTURO)
-     * 
-     * TODO: Implementar lógica completa de redirecionamento baseado no cargo
-     * 
-     * Cargos planejados:
-     * - "Administrador" -> /admin/dashboard
-     * - "Comandante" -> /comandante/dashboard
-     * - "Agente" -> /agente/reclamacoes
-     * - Outros -> /view/pagina-inicial.jsp
-     * 
-     * @param usuario Usuário autenticado
-     * @param request HttpServletRequest
-     * @param response HttpServletResponse
-     */
-    private void redirecionarPorCargo(Usuario usuario, HttpServletRequest request, HttpServletResponse response) 
+    // ========== MÉTODOS AUXILIARES ==========
+    
+    private boolean isUsuarioLogado(HttpServletRequest request) {
+        HttpSession session = request.getSession(false);
+        return session != null && session.getAttribute("usuarioLogado") != null;
+    }
+    
+    private boolean validarCampos(String identificacao, String senha) {
+        return identificacao != null && !identificacao.trim().isEmpty() &&
+               senha != null && !senha.trim().isEmpty();
+    }
+    
+    private void exibirPaginaLogin(HttpServletRequest request, HttpServletResponse response, String mensagemErro) 
+            throws ServletException, IOException {
+        
+        if (mensagemErro != null) {
+            request.setAttribute("erro", mensagemErro);
+        }
+        request.getRequestDispatcher(LOGIN_PAGE).forward(request, response);
+    }
+    
+    private void criarSessaoUsuario(HttpServletRequest request, Usuario usuario) {
+        HttpSession session = request.getSession();
+        session.setAttribute("usuarioLogado", usuario);
+        
+        // Configura tempo de inatividade da sessão (30 minutos)
+        session.setMaxInactiveInterval(30 * 60);
+    }
+    
+    private void logAcesso(Usuario usuario, HttpServletRequest request) {
+        System.out.printf("[LOGIN] Usuário %s (%s) acessou de %s%n",
+            usuario.getNome(),
+            usuario.getPerfil(),
+            request.getRemoteAddr());
+    }
+    
+    private void logError(String mensagem, Exception e) {
+        System.err.println("[ERRO] " + mensagem);
+        e.printStackTrace();
+    }
+    
+    // ========== REDIRECIONAMENTO ==========
+    
+    private void redirecionarPorPerfil(HttpServletRequest request, HttpServletResponse response)
             throws IOException, ServletException {
         
-        // ATUALMENTE REDIRECIONA TODOS PARA TESTPAGE (REMOVA NO FUTURO)
-        response.sendRedirect(request.getContextPath() + "/view/testpage.jsp");
+        // TEMPORÁRIO: Redireciona todos para testpage
+        request.getRequestDispatcher(TEST_PAGE).forward(request, response);
         
-        /* FUTURA IMPLEMENTAÇÃO (DESCOMENTE QUANDO PRONTO)
-        String cargo = usuario.getCargo().toLowerCase();
-        String redirectPage;
-        
-        switch(cargo) {
-            case "administrador":
-                redirectPage = "/admin/dashboard.jsp";
-                break;
-            case "comandante":
-                redirectPage = "/comandante/dashboard.jsp";
-                break;
-            case "agente":
-                redirectPage = "/agente/reclamacoes.jsp";
-                break;
-            default:
-                redirectPage = "/view/pagina-inicial.jsp";
+        /* FUTURA IMPLEMENTAÇÃO:
+        HttpSession session = request.getSession(false);
+        if (session == null) {
+            response.sendRedirect(request.getContextPath() + "/login");
+            return;
         }
         
-        // Verifica se é uma requisição AJAX ou normal
-        if ("XMLHttpRequest".equals(request.getHeader("X-Requested-With"))) {
-            response.setContentType("application/json");
-            response.getWriter().write("{\"redirect\":\"" + redirectPage + "\"}");
+        Usuario usuario = (Usuario) session.getAttribute("usuarioLogado");
+        if (usuario == null) {
+            response.sendRedirect(request.getContextPath() + "/login");
+            return;
+        }
+        
+        String paginaDestino = determinarPaginaPorPerfil(usuario.getPerfil());
+        
+        if (isRequisicaoAjax(request)) {
+            enviarRespostaJson(response, paginaDestino);
         } else {
-            response.sendRedirect(request.getContextPath() + redirectPage);
+            request.getRequestDispatcher(paginaDestino).forward(request, response);
         }
         */
     }
-
-    private void logDebugInfo(Usuario usuario) {
-        System.out.println("\n=== DEBUG: DADOS DO USUÁRIO ===");
-        System.out.println("ID: " + usuario.getId_usuario());
-        System.out.println("Nome: " + usuario.getNome());
-        System.out.println("Email: " + usuario.getEmail());
-        System.out.println("Perfil: " + usuario.getPerfil());
-        System.out.println("Status: " + usuario.getStatus());
-        System.out.println("Cargo: " + usuario.getCargo());
-        System.out.println("=============================\n");
+    
+    /* MÉTODOS PARA IMPLEMENTAÇÃO FUTURA:
+    
+    private String determinarPaginaPorPerfil(String perfil) {
+        // Mapeamento de perfis para páginas
+        switch(perfil.toLowerCase()) {
+            case "administrador":
+                return "/WEB-INF/views/admin/dashboard.jsp";
+            case "comandante":
+                return "/WEB-INF/views/comandante/dashboard.jsp";
+            case "agente":
+                return "/WEB-INF/views/agente/reclamacoes.jsp";
+            default:
+                return "/WEB-INF/views/user/pagina-inicial.jsp";
+        }
     }
+    
+    private boolean isRequisicaoAjax(HttpServletRequest request) {
+        return "XMLHttpRequest".equals(request.getHeader("X-Requested-With"));
+    }
+    
+    private void enviarRespostaJson(HttpServletResponse response, String redirectPage) 
+            throws IOException {
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
+        response.getWriter().write(String.format("{\"redirect\":\"%s\"}", redirectPage));
+    }
+    
+    @Override
+    protected void doDelete(HttpServletRequest request, HttpServletResponse response) 
+            throws ServletException, IOException {
+        // Implementação de logout seguro
+        HttpSession session = request.getSession(false);
+        if (session != null) {
+            registrarLogout((Usuario) session.getAttribute("usuarioLogado"));
+            session.invalidate();
+        }
+        response.sendRedirect(request.getContextPath() + "/login");
+    }
+    
+    private void registrarLogout(Usuario usuario) {
+        // Registrar ação de logout no sistema
+        System.out.printf("[LOGOUT] Usuário %s saiu do sistema%n", usuario.getNome());
+    }
+    */
 }
