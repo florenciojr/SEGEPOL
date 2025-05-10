@@ -4,26 +4,38 @@
  */
 package controller;
 
-
 /**
  *
  * @author JR5
  */
 
-
 import dao.CidadaoDAO;
 import model.Cidadao;
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.time.LocalDate;
+import java.util.List;
 import javax.servlet.ServletException;
+import javax.servlet.annotation.MultipartConfig;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.Part;
 
 @WebServlet("/cidadao")
+@MultipartConfig(
+    fileSizeThreshold = 1024 * 1024 * 1, // 1 MB
+    maxFileSize = 1024 * 1024 * 10,      // 10 MB
+    maxRequestSize = 1024 * 1024 * 100   // 100 MB
+)
 public class CidadaoServlet extends HttpServlet {
     private CidadaoDAO cidadaoDAO;
+    private static final String UPLOAD_DIR = "uploads";
 
     @Override
     public void init() {
@@ -41,6 +53,18 @@ public class CidadaoServlet extends HttpServlet {
 
         try {
             switch (action) {
+                case "buscarPorNome":
+                    buscarCidadaosPorNome(request, response);
+                    break;
+                case "buscarPorCidade":
+                    buscarCidadaosPorCidade(request, response);
+                    break;
+                case "verificarDocumento":
+                    verificarDocumentoExistente(request, response);
+                    break;
+                case "listarPaginado":
+                    listarCidadaosPaginados(request, response);
+                    break;
                 case "novo":
                     mostrarFormulario(request, response);
                     break;
@@ -52,6 +76,9 @@ public class CidadaoServlet extends HttpServlet {
                     break;
                 case "buscar":
                     buscarCidadao(request, response);
+                    break;
+                case "visualizarImagem":
+                    visualizarImagem(request, response);
                     break;
                 default:
                     listarCidadaos(request, response);
@@ -100,6 +127,14 @@ public class CidadaoServlet extends HttpServlet {
     private void salvarCidadao(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         Cidadao cidadao = criarCidadaoAPartirRequest(request);
+        
+        // Processar upload da imagem
+        Part filePart = request.getPart("imagem");
+        if (filePart != null && filePart.getSize() > 0) {
+            String caminhoImagem = processarUploadImagem(filePart, request);
+            cidadao.setCaminhoImagem(caminhoImagem);
+        }
+        
         cidadaoDAO.inserirCidadao(cidadao);
         response.sendRedirect(request.getContextPath() + "/cidadao");
     }
@@ -108,6 +143,18 @@ public class CidadaoServlet extends HttpServlet {
             throws ServletException, IOException {
         Cidadao cidadao = criarCidadaoAPartirRequest(request);
         cidadao.setIdCidadao(Integer.parseInt(request.getParameter("id")));
+        
+        // Processar upload da nova imagem (se fornecida)
+        Part filePart = request.getPart("imagem");
+        if (filePart != null && filePart.getSize() > 0) {
+            String caminhoImagem = processarUploadImagem(filePart, request);
+            cidadao.setCaminhoImagem(caminhoImagem);
+        } else {
+            // Manter a imagem existente se nenhuma nova for enviada
+            Cidadao cidadaoExistente = cidadaoDAO.buscarCidadaoPorId(cidadao.getIdCidadao());
+            cidadao.setCaminhoImagem(cidadaoExistente.getCaminhoImagem());
+        }
+        
         cidadaoDAO.atualizarCidadao(cidadao);
         response.sendRedirect(request.getContextPath() + "/cidadao");
     }
@@ -115,6 +162,18 @@ public class CidadaoServlet extends HttpServlet {
     private void deletarCidadao(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         int id = Integer.parseInt(request.getParameter("id"));
+        
+        // Opcional: deletar a imagem associada ao cidadão
+        Cidadao cidadao = cidadaoDAO.buscarCidadaoPorId(id);
+        if (cidadao.getCaminhoImagem() != null && !cidadao.getCaminhoImagem().isEmpty()) {
+            try {
+                Path imagemPath = Paths.get(getServletContext().getRealPath(""), cidadao.getCaminhoImagem());
+                Files.deleteIfExists(imagemPath);
+            } catch (IOException e) {
+                System.err.println("Erro ao deletar imagem: " + e.getMessage());
+            }
+        }
+        
         cidadaoDAO.deletarCidadao(id);
         response.sendRedirect(request.getContextPath() + "/cidadao");
     }
@@ -125,6 +184,25 @@ public class CidadaoServlet extends HttpServlet {
         Cidadao cidadao = cidadaoDAO.buscarCidadaoPorDocumento(documento);
         request.setAttribute("cidadao", cidadao);
         request.getRequestDispatcher("/WEB-INF/views/cidadaos/detalhesCidadao.jsp").forward(request, response);
+    }
+    
+    private void visualizarImagem(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        int id = Integer.parseInt(request.getParameter("id"));
+        Cidadao cidadao = cidadaoDAO.buscarCidadaoPorId(id);
+        
+        if (cidadao != null && cidadao.getCaminhoImagem() != null && !cidadao.getCaminhoImagem().isEmpty()) {
+            Path imagemPath = Paths.get(getServletContext().getRealPath(""), cidadao.getCaminhoImagem());
+            
+            if (Files.exists(imagemPath)) {
+                response.setContentType(getServletContext().getMimeType(imagemPath.toString()));
+                Files.copy(imagemPath, response.getOutputStream());
+                return;
+            }
+        }
+        
+        // Se não houver imagem, retornar uma imagem padrão ou código 404
+        response.sendError(HttpServletResponse.SC_NOT_FOUND);
     }
 
     private Cidadao criarCidadaoAPartirRequest(HttpServletRequest request) {
@@ -141,5 +219,68 @@ public class CidadaoServlet extends HttpServlet {
         cidadao.setCidade(request.getParameter("cidade"));
         cidadao.setProvincia(request.getParameter("provincia"));
         return cidadao;
+    }
+    
+    private String processarUploadImagem(Part filePart, HttpServletRequest request) throws IOException {
+        // Obter o diretório de uploads absoluto
+        String uploadPath = getServletContext().getRealPath("") + UPLOAD_DIR;
+        Files.createDirectories(Paths.get(uploadPath));
+        
+        // Gerar um nome único para o arquivo
+        String fileName = System.currentTimeMillis() + "_" + Paths.get(filePart.getSubmittedFileName()).getFileName().toString();
+        
+        // Salvar o arquivo
+        try (InputStream fileContent = filePart.getInputStream()) {
+            Path filePath = Paths.get(uploadPath, fileName);
+            Files.copy(fileContent, filePath, StandardCopyOption.REPLACE_EXISTING);
+        }
+        
+        // Retornar o caminho relativo para armazenar no banco de dados
+        return UPLOAD_DIR + "/" + fileName;
+    }
+    
+    private void buscarCidadaosPorNome(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        String nome = request.getParameter("nomes");
+        List<Cidadao> cidadaos = cidadaoDAO.buscarCidadaosPorNome(nome);
+        request.setAttribute("cidadaos", cidadaos);
+        request.setAttribute("termoBusca", nome);
+        request.getRequestDispatcher("/WEB-INF/views/cidadaos/listCidadaos.jsp").forward(request, response);
+    }
+
+    private void buscarCidadaosPorCidade(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        String cidade = request.getParameter("cidade");
+        List<Cidadao> cidadaos = cidadaoDAO.buscarCidadaosPorCidade(cidade);
+        request.setAttribute("cidadaos", cidadaos);
+        request.setAttribute("cidadeBusca", cidade);
+        request.getRequestDispatcher("/WEB-INF/views/cidadaos/listCidadaos.jsp").forward(request, response);
+    }
+
+    private void verificarDocumentoExistente(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        String documento = request.getParameter("documento");
+        boolean existe = cidadaoDAO.verificarDocumentoExistente(documento);
+        
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
+        response.getWriter().write("{\"existe\": " + existe + "}");
+    }
+
+    private void listarCidadaosPaginados(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        int pagina = Integer.parseInt(request.getParameter("pagina"));
+        int itensPorPagina = Integer.parseInt(request.getParameter("itensPorPagina"));
+        int offset = (pagina - 1) * itensPorPagina;
+        
+        List<Cidadao> cidadaos = cidadaoDAO.listarCidadaosComPaginacao(offset, itensPorPagina);
+        int totalCidadaos = cidadaoDAO.contarTotalCidadaos();
+        int totalPaginas = (int) Math.ceil((double) totalCidadaos / itensPorPagina);
+        
+        request.setAttribute("cidadaos", cidadaos);
+        request.setAttribute("paginaAtual", pagina);
+        request.setAttribute("totalPaginas", totalPaginas);
+        request.setAttribute("itensPorPagina", itensPorPagina);
+        request.getRequestDispatcher("/WEB-INF/views/cidadaos/listCidadaos.jsp").forward(request, response);
     }
 }

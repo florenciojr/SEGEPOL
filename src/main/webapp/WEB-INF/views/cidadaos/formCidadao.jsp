@@ -6,193 +6,372 @@
 
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c"%>
+<%@page import="java.util.Arrays"%>
+<%@page import="java.util.List"%>
+<%
+    // Definindo listas de opções que serão usadas nos selects
+    List<String> generos = Arrays.asList("Masculino", "Feminino", "Outro");
+    List<String> tiposDocumento = Arrays.asList("BI", "Passaporte", "Carta de Condução", "Outro");
+    
+    request.setAttribute("generos", generos);
+    request.setAttribute("tiposDocumento", tiposDocumento);
+%>
 <!DOCTYPE html>
 <html>
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-    <title>${cidadao == null ? 'Novo Cidadão' : 'Editar Cidadão'}</title>
+    <title>${cidadao == null ? 'Novo Cidadão' : 'Editar Cidadão'} | PRM</title>
+    <!-- Adicionando Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome para ícones -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 20px;
-            background-color: #f5f5f5;
+        :root {
+            --prm-verde: #006633;
+            --prm-amarelo: #FFD700;
+            --prm-preto: #000000;
+            --prm-vermelho: #CC0000;
         }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8f9fa;
+            padding: 20px;
+        }
+        
         .form-container {
-            max-width: 800px;
+            max-width: 1000px;
             margin: 0 auto;
             background: white;
-            padding: 20px;
-            border-radius: 5px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+            border-top: 5px solid var(--prm-vermelho);
         }
-        h1 {
-            color: #333;
-            border-bottom: 1px solid #eee;
+        
+        .header-title {
+            color: var(--prm-verde);
+            border-bottom: 3px solid var(--prm-amarelo);
             padding-bottom: 10px;
+            margin-bottom: 30px;
+            text-transform: uppercase;
+            font-weight: 700;
         }
-        .form-group {
-            margin-bottom: 15px;
+        
+        .section-title {
+            color: var(--prm-verde);
+            border-bottom: 2px solid var(--prm-amarelo);
+            padding-bottom: 8px;
+            margin: 30px 0 20px;
+            font-size: 1.2rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
-        label {
-            display: block;
+        
+        .form-label {
+            font-weight: 600;
+            color: #495057;
             margin-bottom: 5px;
-            font-weight: bold;
         }
-        input[type="text"],
-        input[type="date"],
-        input[type="tel"],
-        input[type="email"],
-        select {
-            width: 100%;
-            padding: 8px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            box-sizing: border-box;
-        }
-        .row {
-            display: flex;
-            gap: 15px;
-            margin-bottom: 15px;
-        }
-        .col {
-            flex: 1;
-        }
-        .form-actions {
-            margin-top: 20px;
-            text-align: right;
-        }
-        .btn {
-            padding: 8px 15px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            text-decoration: none;
-            font-size: 14px;
-        }
-        .btn-primary {
-            background-color: #4CAF50;
-            color: white;
-        }
-        .btn-secondary {
-            background-color: #6c757d;
-            color: white;
-        }
-        .required:after {
+        
+        .required-label:after {
             content: " *";
-            color: red;
+            color: var(--prm-vermelho);
+        }
+        
+        .btn-prm {
+            background-color: var(--prm-verde);
+            color: white;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            padding: 10px 25px;
+        }
+        
+        .btn-prm:hover {
+            background-color: #005a2b;
+            color: white;
+        }
+        
+        .photo-container {
+            border: 2px dashed #ced4da;
+            border-radius: 8px;
+            height: 200px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            overflow: hidden;
+            background-color: #f8f9fa;
+        }
+        
+        .photo-container:hover {
+            border-color: var(--prm-verde);
+        }
+        
+        .photo-preview {
+            max-width: 100%;
+            max-height: 100%;
+            display: none;
+        }
+        
+        .form-control:focus {
+            border-color: var(--prm-verde);
+            box-shadow: 0 0 0 0.25rem rgba(0, 102, 51, 0.25);
+        }
+        
+        .is-invalid {
+            border-color: #dc3545 !important;
+        }
+
+        .invalid-feedback {
+            color: #dc3545;
+            font-size: 0.875em;
         }
     </style>
 </head>
 <body>
-    <div class="form-container">
-        <h1>${cidadao == null ? 'Cadastrar Novo Cidadão' : 'Editar Cidadão'}</h1>
-        
-        <form action="${pageContext.request.contextPath}/cidadao" method="POST">
-            <input type="hidden" name="action" value="${cidadao == null ? 'salvar' : 'atualizar'}">
+    <div class="container">
+        <div class="form-container">
+            <h1 class="header-title text-center mb-4">
+                ${cidadao == null ? 'Cadastrar Novo Cidadão' : 'Editar Cadastro'}
+                <span class="badge rounded-pill ms-2 ${cidadao == null ? 'bg-danger' : 'bg-warning text-dark'}">
+                    ${cidadao == null ? 'NOVO' : 'EDIÇÃO'}
+                </span>
+            </h1>
             
-            <c:if test="${cidadao != null}">
-                <input type="hidden" name="id" value="${cidadao.idCidadao}">
-            </c:if>
-            
-            <div class="row">
-                <div class="col">
-                    <div class="form-group">
-                        <label for="nome" class="required">Nome Completo</label>
-                        <input type="text" id="nome" name="nome" value="${cidadao.nome}" required>
+            <form action="${pageContext.request.contextPath}/cidadao" method="POST" enctype="multipart/form-data">
+                <input type="hidden" name="action" value="${cidadao == null ? 'salvar' : 'atualizar'}">
+                
+                <c:if test="${cidadao != null}">
+                    <input type="hidden" name="id" value="${cidadao.idCidadao}">
+                </c:if>
+                
+                <!-- Seção: Dados Pessoais -->
+                <h3 class="section-title"><i class="fas fa-user me-2"></i>Dados Pessoais</h3>
+                
+                <div class="row mb-4">
+                    <!-- Foto -->
+                    <div class="col-md-3">
+                        <div class="mb-3">
+                            <label class="form-label">Foto</label>
+                            <div class="photo-container" id="photoContainer">
+                                <i class="fas fa-camera fa-3x text-secondary" id="photoIcon"></i>
+                                <c:if test="${cidadao != null && cidadao.caminhoImagem != null && !cidadao.caminhoImagem.isEmpty()}">
+                                    <img src="${pageContext.request.contextPath}/cidadao?action=visualizarImagem&id=${cidadao.idCidadao}" 
+                                         class="photo-preview" id="photoPreview">
+                                </c:if>
+                            </div>
+                            <input type="file" id="imagem" name="imagem" accept="image/*" class="d-none">
+                        </div>
+                    </div>
+                    
+                    <!-- Dados Básicos -->
+                    <div class="col-md-9">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="nome" class="form-label required-label">Nome Completo</label>
+                                <input type="text" class="form-control" id="nome" name="nome" 
+                                       value="${cidadao.nome}" required>
+                                <div class="invalid-feedback">Este campo é obrigatório</div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="genero" class="form-label required-label">Gênero</label>
+                                <select class="form-select" id="genero" name="genero" required>
+                                    <option value="">Selecione...</option>
+                                    <c:forEach items="${generos}" var="genero">
+                                        <option value="${genero}" ${cidadao.genero == genero ? 'selected' : ''}>
+                                            ${genero}
+                                        </option>
+                                    </c:forEach>
+                                </select>
+                                <div class="invalid-feedback">Este campo é obrigatório</div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="dataNascimento" class="form-label required-label">Data de Nascimento</label>
+                                <input type="date" class="form-control" id="dataNascimento" name="dataNascimento" 
+                                       value="${cidadao.dataNascimento}" required>
+                                <div class="invalid-feedback">Este campo é obrigatório</div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="tipoDocumento" class="form-label required-label">Tipo de Documento</label>
+                                <select class="form-select" id="tipoDocumento" name="tipoDocumento" required>
+                                    <option value="">Selecione...</option>
+                                    <c:forEach items="${tiposDocumento}" var="tipo">
+                                        <option value="${tipo}" ${cidadao.tipoDocumento == tipo ? 'selected' : ''}>
+                                            ${tipo}
+                                        </option>
+                                    </c:forEach>
+                                </select>
+                                <div class="invalid-feedback">Este campo é obrigatório</div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="documentoIdentificacao" class="form-label required-label">Nº Documento</label>
+                                <input type="text" class="form-control" id="documentoIdentificacao" 
+                                       name="documentoIdentificacao" value="${cidadao.documentoIdentificacao}" 
+                                       placeholder="Número do documento" required>
+                                <div class="invalid-feedback">Este campo é obrigatório</div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="naturalidade" class="form-label">Naturalidade</label>
+                                <input type="text" class="form-control" id="naturalidade" name="naturalidade" 
+                                       value="${cidadao.naturalidade}" placeholder="Cidade/Província de nascimento">
+                            </div>
+                        </div>
                     </div>
                 </div>
-                <div class="col">
-                    <div class="form-group">
-                        <label for="genero" class="required">Gênero</label>
-                        <select id="genero" name="genero" required>
-                            <option value="">Selecione...</option>
-                            <option value="Masculino" ${cidadao.genero == 'Masculino' ? 'selected' : ''}>Masculino</option>
-                            <option value="Feminino" ${cidadao.genero == 'Feminino' ? 'selected' : ''}>Feminino</option>
-                            <option value="Outro" ${cidadao.genero == 'Outro' ? 'selected' : ''}>Outro</option>
-                        </select>
+                
+                <!-- Seção: Contato -->
+                <h3 class="section-title"><i class="fas fa-phone-alt me-2"></i>Contato</h3>
+                
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="telefone" class="form-label required-label">Telefone</label>
+                        <input type="tel" class="form-control" id="telefone" name="telefone" 
+                               value="${cidadao.telefone}" placeholder="(XX) XXXXX-XXXX" required>
+                        <div class="invalid-feedback">Este campo é obrigatório</div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="email" class="form-label">E-mail</label>
+                        <input type="email" class="form-control" id="email" name="email" 
+                               value="${cidadao.email}" placeholder="exemplo@dominio.com">
                     </div>
                 </div>
-            </div>
-            
-            <div class="row">
-                <div class="col">
-                    <div class="form-group">
-                        <label for="dataNascimento" class="required">Data de Nascimento</label>
-                        <input type="date" id="dataNascimento" name="dataNascimento" value="${cidadao.dataNascimento}" required>
+                
+                <!-- Seção: Endereço -->
+                <h3 class="section-title"><i class="fas fa-map-marker-alt me-2"></i>Endereço Residencial</h3>
+                
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="provincia" class="form-label">Província</label>
+                        <input type="text" class="form-control" id="provincia" name="provincia" 
+                               value="${cidadao.provincia}">
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="cidade" class="form-label">Cidade</label>
+                        <input type="text" class="form-control" id="cidade" name="cidade" 
+                               value="${cidadao.cidade}">
                     </div>
                 </div>
-                <div class="col">
-                    <div class="form-group">
-                        <label for="documentoIdentificacao" class="required">Documento de Identificação</label>
-                        <input type="text" id="documentoIdentificacao" name="documentoIdentificacao" value="${cidadao.documentoIdentificacao}" required>
+                
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="bairro" class="form-label">Bairro</label>
+                        <input type="text" class="form-control" id="bairro" name="bairro" 
+                               value="${cidadao.bairro}">
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="rua" class="form-label">Rua e Número</label>
+                        <input type="text" class="form-control" id="rua" name="rua" 
+                               value="${cidadao.rua}" placeholder="Ex: Av. 25 de Setembro, nº 1234">
                     </div>
                 </div>
-            </div>
-            
-            <div class="row">
-                <div class="col">
-                    <div class="form-group">
-                        <label for="telefone" class="required">Telefone</label>
-                        <input type="tel" id="telefone" name="telefone" value="${cidadao.telefone}" required>
-                    </div>
+                
+                <!-- Botões de Ação -->
+                <div class="d-flex justify-content-between mt-5 pt-4 border-top">
+                    <a href="${pageContext.request.contextPath}/cidadao" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left me-2"></i>Voltar
+                    </a>
+                    <button type="submit" class="btn btn-prm">
+                        <i class="fas fa-save me-2"></i>${cidadao == null ? 'Cadastrar' : 'Atualizar'}
+                    </button>
                 </div>
-                <div class="col">
-                    <div class="form-group">
-                        <label for="email">Email</label>
-                        <input type="email" id="email" name="email" value="${cidadao.email}">
-                    </div>
-                </div>
-            </div>
-            
-            <div class="form-group">
-                <label for="naturalidade">Naturalidade</label>
-                <input type="text" id="naturalidade" name="naturalidade" value="${cidadao.naturalidade}">
-            </div>
-            
-            <h3>Endereço</h3>
-            <div class="row">
-                <div class="col">
-                    <div class="form-group">
-                        <label for="provincia">Província</label>
-                        <input type="text" id="provincia" name="provincia" value="${cidadao.provincia}">
-                    </div>
-                </div>
-                <div class="col">
-                    <div class="form-group">
-                        <label for="cidade">Cidade</label>
-                        <input type="text" id="cidade" name="cidade" value="${cidadao.cidade}">
-                    </div>
-                </div>
-            </div>
-            
-            <div class="row">
-                <div class="col">
-                    <div class="form-group">
-                        <label for="bairro">Bairro</label>
-                        <input type="text" id="bairro" name="bairro" value="${cidadao.bairro}">
-                    </div>
-                </div>
-                <div class="col">
-                    <div class="form-group">
-                        <label for="rua">Rua</label>
-                        <input type="text" id="rua" name="rua" value="${cidadao.rua}">
-                    </div>
-                </div>
-            </div>
-            
-            <div class="form-actions">
-                <a href="${pageContext.request.contextPath}/cidadao" class="btn btn-secondary">Cancelar</a>
-                <button type="submit" class="btn btn-primary">${cidadao == null ? 'Cadastrar' : 'Atualizar'}</button>
-            </div>
-        </form>
+            </form>
+        </div>
     </div>
+
+    <!-- Bootstrap JS Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Font Awesome para ícones -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
     
     <script>
         // Máscara para telefone
         document.getElementById('telefone').addEventListener('input', function(e) {
             var x = e.target.value.replace(/\D/g, '').match(/(\d{0,2})(\d{0,5})(\d{0,4})/);
             e.target.value = !x[2] ? x[1] : '(' + x[1] + ') ' + x[2] + (x[3] ? '-' + x[3] : '');
+        });
+        
+        // Upload de foto
+        const photoContainer = document.getElementById('photoContainer');
+        const photoInput = document.getElementById('imagem');
+        const photoPreview = document.getElementById('photoPreview');
+        const photoIcon = document.getElementById('photoIcon');
+        
+        photoContainer.addEventListener('click', () => photoInput.click());
+        
+        photoInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    if (!photoPreview) {
+                        // Se não existir preview, cria um
+                        const newPreview = document.createElement('img');
+                        newPreview.id = 'photoPreview';
+                        newPreview.className = 'photo-preview';
+                        newPreview.src = event.target.result;
+                        newPreview.style.display = 'block';
+                        photoContainer.appendChild(newPreview);
+                    } else {
+                        photoPreview.src = event.target.result;
+                        photoPreview.style.display = 'block';
+                    }
+                    photoIcon.style.display = 'none';
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+        
+        // Verificar se documento já existe
+        document.getElementById('documentoIdentificacao').addEventListener('blur', function() {
+            const documento = this.value;
+            if (documento.length > 0) {
+                fetch('${pageContext.request.contextPath}/cidadao?action=verificarDocumento&documento=' + documento)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.existe) {
+                            alert('Este documento já está cadastrado no sistema!');
+                            document.getElementById('documentoIdentificacao').focus();
+                        }
+                    });
+            }
+        });
+
+        // Validação do formulário antes de enviar
+        document.querySelector('form').addEventListener('submit', function(e) {
+            const requiredFields = this.querySelectorAll('[required]');
+            let isValid = true;
+            
+            requiredFields.forEach(field => {
+                if (!field.value.trim()) {
+                    isValid = false;
+                    field.classList.add('is-invalid');
+                } else {
+                    field.classList.remove('is-invalid');
+                }
+            });
+            
+            if (!isValid) {
+                e.preventDefault();
+                alert('Por favor, preencha todos os campos obrigatórios!');
+            }
+        });
+        
+        // Foco no primeiro campo ao carregar a página
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('nome').focus();
+            
+            // Se já existir uma foto, mostra o preview
+            if (photoPreview) {
+                photoPreview.style.display = 'block';
+                photoIcon.style.display = 'none';
+            }
         });
     </script>
 </body>

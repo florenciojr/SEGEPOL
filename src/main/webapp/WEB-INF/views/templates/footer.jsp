@@ -13,6 +13,11 @@
                     .footer {
                         border-top: 3px solid var(--prm-amarelo);
                         background-color: var(--prm-preto) !important;
+    color: white;
+    padding: 20px 0;
+    text-align: center;
+    margin-top: auto; /* Isso empurra o footer para baixo */
+    width: 100%;
                     }
                     
                     .footer-logo {
@@ -30,6 +35,7 @@
                         color: white !important;
                         text-decoration: underline;
                     }
+
                     
                     .emergencia {
                         font-family: 'Arial Black', sans-serif;

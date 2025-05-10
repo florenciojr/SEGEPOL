@@ -112,16 +112,41 @@
             border-radius: 0 3px 3px 0;
         }
         
-        .photo-placeholder {
-            width: 120px;
-            height: 160px;
-            background-color: #ecf0f1;
-            border: 1px dashed #bdc3c7;
+        .photo-container {
+            width: 150px;
+            height: 180px;
+            border: 1px solid #ddd;
             display: flex;
             align-items: center;
             justify-content: center;
-            color: #7f8c8d;
+            overflow: hidden;
+            background-color: #f8f9fa;
             margin: 0 auto;
+        }
+        
+        .photo-container img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: cover;
+        }
+        
+        .no-photo {
+            color: #7f8c8d;
+            text-align: center;
+            padding: 10px;
+            font-size: 12px;
+        }
+        
+        .document-info {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .document-item {
+            flex: 1;
+            min-width: 200px;
         }
         
         .action-buttons {
@@ -197,6 +222,8 @@
             }
         }
     </style>
+    <!-- Adicionando Font Awesome para ícones -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
     <div class="police-header">
@@ -213,8 +240,19 @@
         <div class="police-card-body">
             <c:if test="${cidadao != null}">
                 <div style="display: flex; gap: 30px; margin-bottom: 20px;">
-                    <div class="photo-placeholder">
-                        FOTO 3x4
+                    <div class="photo-container">
+                        <c:choose>
+                            <c:when test="${not empty cidadao.caminhoImagem}">
+                                <img src="${pageContext.request.contextPath}/cidadao?action=visualizarImagem&id=${cidadao.idCidadao}" 
+                                     alt="Foto do cidadão">
+                            </c:when>
+                            <c:otherwise>
+                                <div class="no-photo">
+                                    <i class="fas fa-user" style="font-size: 40px; margin-bottom: 10px; display: block;"></i>
+                                    SEM FOTO
+                                </div>
+                            </c:otherwise>
+                        </c:choose>
                     </div>
                     
                     <div style="flex: 1;">
@@ -222,12 +260,16 @@
                             ${cidadao.nome}
                         </h3>
                         
-                        <div style="display: flex; gap: 20px; margin-bottom: 15px;">
-                            <div>
-                                <div class="info-label">Documento</div>
+                        <div class="document-info">
+                            <div class="document-item">
+                                <div class="info-label">Tipo de Documento</div>
+                                <div class="info-value">${cidadao.tipoDocumento}</div>
+                            </div>
+                            <div class="document-item">
+                                <div class="info-label">Nº Documento</div>
                                 <div class="info-value" style="font-weight: bold;">${cidadao.documentoIdentificacao}</div>
                             </div>
-                            <div>
+                            <div class="document-item">
                                 <div class="info-label">Naturalidade</div>
                                 <div class="info-value">${cidadao.naturalidade}</div>
                             </div>

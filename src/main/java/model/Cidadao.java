@@ -10,14 +10,21 @@ package model;
  */
 
 
-import java.time.LocalDate;
 
+
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+
+/**
+ * Classe que representa um cidadão no sistema
+ */
 public class Cidadao {
-    private Integer idCidadao;
+    private int idCidadao;
     private String nome;
     private String genero;
     private LocalDate dataNascimento;
     private String documentoIdentificacao;
+    private String tipoDocumento;
     private String telefone;
     private String email;
     private String naturalidade;
@@ -25,16 +32,41 @@ public class Cidadao {
     private String bairro;
     private String cidade;
     private String provincia;
+    private String caminhoImagem;
+    private LocalDateTime dataRegistro;
 
-    // Construtor vazio
-    public Cidadao() {}
+    // Construtores
+    public Cidadao() {
+    }
+
+    public Cidadao(int idCidadao, String nome, String genero, LocalDate dataNascimento, 
+                  String documentoIdentificacao, String tipoDocumento, String telefone, 
+                  String email, String naturalidade, String rua, String bairro, 
+                  String cidade, String provincia, String caminhoImagem, 
+                   LocalDateTime dataRegistro) {
+        this.idCidadao = idCidadao;
+        this.nome = nome;
+        this.genero = genero;
+        this.dataNascimento = dataNascimento;
+        this.documentoIdentificacao = documentoIdentificacao;
+        this.tipoDocumento = tipoDocumento;
+        this.telefone = telefone;
+        this.email = email;
+        this.naturalidade = naturalidade;
+        this.rua = rua;
+        this.bairro = bairro;
+        this.cidade = cidade;
+        this.provincia = provincia;
+        this.caminhoImagem = caminhoImagem;
+        this.dataRegistro = dataRegistro;
+    }
 
     // Getters e Setters
-    public Integer getIdCidadao() {
+    public int getIdCidadao() {
         return idCidadao;
     }
 
-    public void setIdCidadao(Integer idCidadao) {
+    public void setIdCidadao(int idCidadao) {
         this.idCidadao = idCidadao;
     }
 
@@ -68,6 +100,14 @@ public class Cidadao {
 
     public void setDocumentoIdentificacao(String documentoIdentificacao) {
         this.documentoIdentificacao = documentoIdentificacao;
+    }
+
+    public String getTipoDocumento() {
+        return tipoDocumento;
+    }
+
+    public void setTipoDocumento(String tipoDocumento) {
+        this.tipoDocumento = tipoDocumento;
     }
 
     public String getTelefone() {
@@ -126,19 +166,43 @@ public class Cidadao {
         this.provincia = provincia;
     }
 
-    public Object getIdEndereco() {
-        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+    public String getCaminhoImagem() {
+        return caminhoImagem;
     }
 
-    public String getSexo() {
-        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+    public void setCaminhoImagem(String caminhoImagem) {
+        this.caminhoImagem = caminhoImagem;
     }
 
-    public void setIdEndereco(Integer integer) {
-        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+ 
+
+    public LocalDateTime getDataRegistro() {
+        return dataRegistro;
     }
 
-    public void setSexo(String string) {
-        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+    public void setDataRegistro(LocalDateTime dataRegistro) {
+        this.dataRegistro = dataRegistro;
+    }
+
+    // Método toString para representação textual do objeto
+    @Override
+    public String toString() {
+        return "Cidadao{" +
+                "idCidadao=" + idCidadao +
+                ", nome='" + nome + '\'' +
+                ", genero='" + genero + '\'' +
+                ", dataNascimento=" + dataNascimento +
+                ", documentoIdentificacao='" + documentoIdentificacao + '\'' +
+                ", tipoDocumento='" + tipoDocumento + '\'' +
+                ", telefone='" + telefone + '\'' +
+                ", email='" + email + '\'' +
+                ", naturalidade='" + naturalidade + '\'' +
+                ", rua='" + rua + '\'' +
+                ", bairro='" + bairro + '\'' +
+                ", cidade='" + cidade + '\'' +
+                ", provincia='" + provincia + '\'' +
+                ", caminhoImagem='" + caminhoImagem + '\'' +
+                ", dataRegistro=" + dataRegistro +
+                '}';
     }
 }
