@@ -10,18 +10,137 @@ package dao;
  */
 
 
+
+import java.io.UnsupportedEncodingException;
+import java.nio.charset.Charset;
 import java.sql.*;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Scanner;
 import model.Queixa;
+import model.TiposQueixa;
 import model.Conexao;
 
 public class QueixaDAO {
     private static final String[] STATUS_PERMITIDOS = {
-        "Aberta", "Em Investigação", "Concluída", "Cancelada"
+        "Registrada", "Em Investigação", "Atribuída", "Arquivada", "Resolvida", "Cancelada"
     };
+    
+public Map<Integer, String> listarCidadaosRecentes() throws SQLException {
+    Map<Integer, String> cidadaos = new LinkedHashMap<>();
+    String sql = "SELECT id_cidadao, nome FROM cidadaos ORDER BY data_registro DESC LIMIT 20";
+    
+    try (Connection conn = Conexao.conectar();
+         PreparedStatement stmt = conn.prepareStatement(sql);
+         ResultSet rs = stmt.executeQuery()) {
+        
+        while (rs.next()) {
+            int id = rs.getInt("id_cidadao");
+            String nome = rs.getString("nome");
+            
+            // Correção definitiva para problemas de encoding
+            if (nome != null) {
+                try {
+                    // Verifica se a string está em ISO-8859-1 e converte para UTF-8
+                    if (!Charset.forName("UTF-8").newEncoder().canEncode(nome)) {
+                        nome = new String(nome.getBytes("ISO-8859-1"), "UTF-8");
+                    }
+                } catch (UnsupportedEncodingException e) {
+                    System.err.println("Erro ao converter nome do cidadão ID " + id);
+                }
+            }
+            
+            cidadaos.put(id, nome != null ? nome : "Nome não disponível");
+        }
+    }
+    return cidadaos;
+}
+
+    // Método para obter tipos de queixa para dropdown
+    public List<TiposQueixa> listarTiposQueixa() {
+        List<TiposQueixa> tipos = new ArrayList<>();
+        String sql = "SELECT id_tipo, nome_tipo, gravidade FROM tipos_queixa ORDER BY nome_tipo";
+        
+        try (Connection conn = Conexao.conectar();
+             PreparedStatement stmt = conn.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+            
+            while (rs.next()) {
+                TiposQueixa tipo = new TiposQueixa();
+                tipo.setIdTipo(rs.getInt("id_tipo"));
+                tipo.setNomeTipo(rs.getString("nome_tipo"));
+                tipo.setGravidade(rs.getString("gravidade"));
+                
+                tipos.add(tipo);
+            }
+        } catch (SQLException e) {
+            System.err.println("Erro ao listar tipos de queixa: " + e.getMessage());
+        }
+        return tipos;
+    }
+
+
+    // Método simplificado para inserção via web
+    public boolean inserirQueixaWeb(Queixa queixa, int idUsuarioLogado) {
+        // Validações básicas
+        if (queixa.getTitulo() == null || queixa.getTitulo().trim().isEmpty()) {
+            return false;
+        }
+        
+        // Define valores padrão
+        queixa.setStatus("Registrada");
+        queixa.setIdUsuario(idUsuarioLogado);
+        queixa.setDataRegistro(LocalDate.now());
+        
+        return inserirQueixa(queixa);
+    }
+
+    // Método para listagem com paginação
+    public List<Queixa> listarQueixasPaginado(int pagina, int itensPorPagina) {
+        List<Queixa> queixas = new ArrayList<>();
+        String sql = "SELECT * FROM queixas ORDER BY data_registro DESC LIMIT ?, ?";
+        
+        try (Connection conn = Conexao.conectar();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            
+            stmt.setInt(1, (pagina - 1) * itensPorPagina);
+            stmt.setInt(2, itensPorPagina);
+            
+            ResultSet rs = stmt.executeQuery();
+            while (rs.next()) {
+                Queixa queixa = mapearQueixa(rs);
+                queixas.add(queixa);
+            }
+        } catch (SQLException e) {
+            System.err.println("Erro ao listar queixas paginadas: " + e.getMessage());
+        }
+        return queixas;
+    }
+
+    // Método auxiliar para mapear ResultSet para objeto Queixa
+    private Queixa mapearQueixa(ResultSet rs) throws SQLException {
+        Queixa queixa = new Queixa();
+        queixa.setIdQueixa(rs.getInt("id_queixa"));
+        queixa.setTitulo(rs.getString("titulo"));
+        queixa.setDescricao(rs.getString("descricao"));
+        
+        Timestamp timestamp = rs.getTimestamp("data_incidente");
+        if (timestamp != null) {
+            queixa.setDataIncidente(timestamp.toLocalDateTime().toLocalDate());
+        }
+        
+        queixa.setDataRegistro(rs.getTimestamp("data_registro").toLocalDateTime().toLocalDate());
+        queixa.setLocalIncidente(rs.getString("local_incidente"));
+        queixa.setCoordenadas(rs.getString("coordenadas"));
+        queixa.setStatus(rs.getString("status"));
+        queixa.setIdCidadao(rs.getInt("id_cidadao"));
+        queixa.setIdTipo(rs.getInt("id_tipo"));
+        queixa.setIdUsuario(rs.getInt("id_usuario"));
+        return queixa;
+    }
 
     // Método para verificar se um registro existe
     private boolean existeRegistro(String tabela, String campo, int id) {
@@ -45,39 +164,6 @@ public class QueixaDAO {
             }
         }
         return false;
-    }
-
-    // Mostrar status disponíveis
-    private void mostrarStatusDisponiveis() {
-        System.out.println("\nStatus disponíveis:");
-        for (int i = 0; i < STATUS_PERMITIDOS.length; i++) {
-            System.out.println((i+1) + " - " + STATUS_PERMITIDOS[i]);
-        }
-    }
-
-    // Obter status válido do usuário
-    private String obterStatusValido(Scanner scanner) {
-        mostrarStatusDisponiveis();
-        while (true) {
-            System.out.print("Escolha o status (número ou nome): ");
-            String input = scanner.nextLine().trim();
-            
-            try {
-                int opcao = Integer.parseInt(input);
-                if (opcao >= 1 && opcao <= STATUS_PERMITIDOS.length) {
-                    return STATUS_PERMITIDOS[opcao-1];
-                }
-            } catch (NumberFormatException e) {
-                // Não é número, verifica se é nome válido
-                for (String s : STATUS_PERMITIDOS) {
-                    if (s.equalsIgnoreCase(input)) {
-                        return s;
-                    }
-                }
-            }
-            System.err.println("Status inválido. Escolha uma das opções listadas.");
-            mostrarStatusDisponiveis();
-        }
     }
 
     // Inserir queixa com validações
@@ -108,19 +194,27 @@ public class QueixaDAO {
             return false;
         }
 
-        String sql = "INSERT INTO queixas (titulo, descricao, data_registro, status, id_cidadao, id_tipo, id_usuario) " +
-                     "VALUES (?, ?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO queixas (titulo, descricao, data_incidente, local_incidente, coordenadas, status, id_cidadao, id_tipo, id_usuario) " +
+                     "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
         try (Connection conn = Conexao.conectar();
              PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
 
             stmt.setString(1, queixa.getTitulo());
             stmt.setString(2, queixa.getDescricao());
-            stmt.setDate(3, Date.valueOf(queixa.getDataRegistro()));
-            stmt.setString(4, queixa.getStatus());
-            stmt.setInt(5, queixa.getIdCidadao());
-            stmt.setInt(6, queixa.getIdTipo());
-            stmt.setInt(7, queixa.getIdUsuario());
+            
+            if (queixa.getDataIncidente() != null) {
+                stmt.setTimestamp(3, Timestamp.valueOf(queixa.getDataIncidente().atStartOfDay()));
+            } else {
+                stmt.setNull(3, Types.TIMESTAMP);
+            }
+            
+            stmt.setString(4, queixa.getLocalIncidente());
+            stmt.setString(5, queixa.getCoordenadas());
+            stmt.setString(6, queixa.getStatus());
+            stmt.setInt(7, queixa.getIdCidadao());
+            stmt.setInt(8, queixa.getIdTipo());
+            stmt.setInt(9, queixa.getIdUsuario());
 
             int affectedRows = stmt.executeUpdate();
             
@@ -154,15 +248,7 @@ public class QueixaDAO {
              ResultSet rs = stmt.executeQuery(sql)) {
 
             while (rs.next()) {
-                Queixa queixa = new Queixa();
-                queixa.setIdQueixa(rs.getInt("id_queixa"));
-                queixa.setTitulo(rs.getString("titulo"));
-                queixa.setDescricao(rs.getString("descricao"));
-                queixa.setDataRegistro(rs.getDate("data_registro").toLocalDate());
-                queixa.setStatus(rs.getString("status"));
-                queixa.setIdCidadao(rs.getInt("id_cidadao"));
-                queixa.setIdTipo(rs.getInt("id_tipo"));
-                queixa.setIdUsuario(rs.getInt("id_usuario"));
+                Queixa queixa = mapearQueixa(rs);
                 queixas.add(queixa);
             }
         } catch (SQLException e) {
@@ -182,16 +268,7 @@ public class QueixaDAO {
             ResultSet rs = stmt.executeQuery();
 
             if (rs.next()) {
-                Queixa queixa = new Queixa();
-                queixa.setIdQueixa(rs.getInt("id_queixa"));
-                queixa.setTitulo(rs.getString("titulo"));
-                queixa.setDescricao(rs.getString("descricao"));
-                queixa.setDataRegistro(rs.getDate("data_registro").toLocalDate());
-                queixa.setStatus(rs.getString("status"));
-                queixa.setIdCidadao(rs.getInt("id_cidadao"));
-                queixa.setIdTipo(rs.getInt("id_tipo"));
-                queixa.setIdUsuario(rs.getInt("id_usuario"));
-                return queixa;
+                return mapearQueixa(rs);
             }
         } catch (SQLException e) {
             System.err.println("Erro ao buscar queixa: " + e.getMessage());
@@ -211,21 +288,29 @@ public class QueixaDAO {
             return false;
         }
 
-        String sql = "UPDATE queixas SET titulo = ?, descricao = ?, data_registro = ?, " +
-                     "status = ?, id_cidadao = ?, id_tipo = ?, id_usuario = ? " +
-                     "WHERE id_queixa = ?";
+        String sql = "UPDATE queixas SET titulo = ?, descricao = ?, data_incidente = ?, " +
+                     "local_incidente = ?, coordenadas = ?, status = ?, id_cidadao = ?, " +
+                     "id_tipo = ?, id_usuario = ? WHERE id_queixa = ?";
 
         try (Connection conn = Conexao.conectar();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setString(1, queixa.getTitulo());
             stmt.setString(2, queixa.getDescricao());
-            stmt.setDate(3, Date.valueOf(queixa.getDataRegistro()));
-            stmt.setString(4, queixa.getStatus());
-            stmt.setInt(5, queixa.getIdCidadao());
-            stmt.setInt(6, queixa.getIdTipo());
-            stmt.setInt(7, queixa.getIdUsuario());
-            stmt.setInt(8, queixa.getIdQueixa());
+            
+            if (queixa.getDataIncidente() != null) {
+                stmt.setTimestamp(3, Timestamp.valueOf(queixa.getDataIncidente().atStartOfDay()));
+            } else {
+                stmt.setNull(3, Types.TIMESTAMP);
+            }
+            
+            stmt.setString(4, queixa.getLocalIncidente());
+            stmt.setString(5, queixa.getCoordenadas());
+            stmt.setString(6, queixa.getStatus());
+            stmt.setInt(7, queixa.getIdCidadao());
+            stmt.setInt(8, queixa.getIdTipo());
+            stmt.setInt(9, queixa.getIdUsuario());
+            stmt.setInt(10, queixa.getIdQueixa());
 
             int affectedRows = stmt.executeUpdate();
             return affectedRows > 0;
@@ -251,13 +336,12 @@ public class QueixaDAO {
         }
     }
 
-    // Métodos utilitários para o menu
+    // Métodos utilitários para o menu (opcional - só necessário se for usar em aplicação console)
     private static LocalDate obterDataValida(Scanner scanner, String mensagem) {
         while (true) {
             System.out.print(mensagem);
             String input = scanner.nextLine().trim();
             
-            // Permite digitar sem hífen (YYYYMMDD)
             if (input.matches("\\d{8}")) {
                 input = input.substring(0, 4) + "-" + input.substring(4, 6) + "-" + input.substring(6, 8);
             }
@@ -270,182 +354,35 @@ public class QueixaDAO {
         }
     }
 
-    private static int obterIdValido(Scanner scanner, String mensagem) {
-        while (true) {
-            System.out.print(mensagem);
-            try {
-                int id = Integer.parseInt(scanner.nextLine());
-                if (id > 0) {
-                    return id;
-                }
-                System.err.println("ID deve ser maior que zero");
-            } catch (NumberFormatException e) {
-                System.err.println("Digite um número válido");
-            }
-        }
+// Método para obter os status permitidos
+    public String[] getStatusPermitidos() {
+        return STATUS_PERMITIDOS.clone();
     }
 
-    // Main interativo
-    public static void main(String[] args) {
-        QueixaDAO dao = new QueixaDAO();
-        Scanner scanner = new Scanner(System.in);
-
-        while (true) {
-            System.out.println("\n=== MENU QUEIXAS ===");
-            System.out.println("1. Inserir nova queixa");
-            System.out.println("2. Atualizar queixa");
-            System.out.println("3. Deletar queixa");
-            System.out.println("4. Listar todas as queixas");
-            System.out.println("5. Buscar queixa por ID");
-            System.out.println("6. Sair");
-            System.out.print("Escolha: ");
-
-            try {
-                String input = scanner.nextLine();
-                int opcao = Integer.parseInt(input);
-
-                switch (opcao) {
-                    case 1:
-                        System.out.println("\nNOVA QUEIXA");
-                        
-                        System.out.print("Título: ");
-                        String titulo = scanner.nextLine();
-                        
-                        System.out.print("Descrição: ");
-                        String descricao = scanner.nextLine();
-                        
-                        LocalDate dataRegistro = obterDataValida(scanner, "Data de registro (YYYY-MM-DD ou YYYYMMDD): ");
-                        
-                        String status = dao.obterStatusValido(scanner);
-                        
-                        int idCidadao = obterIdValido(scanner, "ID do Cidadão: ");
-                        int idTipo = obterIdValido(scanner, "ID do Tipo de Queixa: ");
-                        int idUsuario = obterIdValido(scanner, "ID do Usuário: ");
-                        
-                        Queixa novaQueixa = new Queixa();
-                        novaQueixa.setTitulo(titulo);
-                        novaQueixa.setDescricao(descricao);
-                        novaQueixa.setDataRegistro(dataRegistro);
-                        novaQueixa.setStatus(status);
-                        novaQueixa.setIdCidadao(idCidadao);
-                        novaQueixa.setIdTipo(idTipo);
-                        novaQueixa.setIdUsuario(idUsuario);
-                        
-                        if (dao.inserirQueixa(novaQueixa)) {
-                            System.out.println("Queixa cadastrada com sucesso!");
-                        }
-                        break;
-                        
-                    case 2:
-                        System.out.println("\nATUALIZAR QUEIXA");
-                        int idAtualizar = obterIdValido(scanner, "ID da Queixa: ");
-                        
-                        Queixa queixaAtual = dao.buscarQueixaPorId(idAtualizar);
-                        if (queixaAtual == null) {
-                            break;
-                        }
-                        
-                        System.out.println("\nDados atuais:");
-                        System.out.println(queixaAtual);
-                        
-                        System.out.print("\nNovo Título (Enter para manter): ");
-                        String novoTitulo = scanner.nextLine();
-                        if (!novoTitulo.isEmpty()) {
-                            queixaAtual.setTitulo(novoTitulo);
-                        }
-                        
-                        System.out.print("Nova Descrição (Enter para manter): ");
-                        String novaDescricao = scanner.nextLine();
-                        if (!novaDescricao.isEmpty()) {
-                            queixaAtual.setDescricao(novaDescricao);
-                        }
-                        
-                        System.out.print("Nova Data (YYYY-MM-DD ou Enter para manter): ");
-                        String novaDataStr = scanner.nextLine();
-                        if (!novaDataStr.isEmpty()) {
-                            try {
-                                queixaAtual.setDataRegistro(LocalDate.parse(novaDataStr));
-                            } catch (Exception e) {
-                                System.err.println("Formato inválido. Mantendo data anterior.");
-                            }
-                        }
-                        
-                        System.out.print("Deseja alterar o status? (S/N): ");
-                        if (scanner.nextLine().equalsIgnoreCase("S")) {
-                            queixaAtual.setStatus(dao.obterStatusValido(scanner));
-                        }
-                        
-                        System.out.print("Novo ID do Cidadão (Enter para manter): ");
-                        String novoCidadao = scanner.nextLine();
-                        if (!novoCidadao.isEmpty()) {
-                            try {
-                                queixaAtual.setIdCidadao(Integer.parseInt(novoCidadao));
-                            } catch (NumberFormatException e) {
-                                System.err.println("ID inválido. Mantendo valor anterior.");
-                            }
-                        }
-                        
-                        if (dao.atualizarQueixa(queixaAtual)) {
-                            System.out.println("Queixa atualizada com sucesso!");
-                        }
-                        break;
-                        
-                    case 3:
-                        System.out.println("\nDELETAR QUEIXA");
-                        int idDeletar = obterIdValido(scanner, "ID da Queixa: ");
-                        
-                        System.out.print("Confirmar exclusão? (S/N): ");
-                        if (scanner.nextLine().equalsIgnoreCase("S")) {
-                            if (dao.deletarQueixa(idDeletar)) {
-                                System.out.println("Queixa deletada com sucesso");
-                            }
-                        } else {
-                            System.out.println("Operação cancelada");
-                        }
-                        break;
-                        
-                    case 4:
-                        System.out.println("\nLISTA DE QUEIXAS");
-                        List<Queixa> queixas = dao.listarQueixas();
-                        if (queixas.isEmpty()) {
-                            System.out.println("Nenhuma queixa encontrada");
-                        } else {
-                            System.out.println("Total: " + queixas.size() + " queixa(s)");
-                            System.out.println("--------------------------------");
-                            for (Queixa q : queixas) {
-                                System.out.println(q);
-                                System.out.println("--------------------------------");
-                            }
-                        }
-                        break;
-                        
-                    case 5:
-                        System.out.println("\nBUSCAR QUEIXA");
-                        int idBuscar = obterIdValido(scanner, "ID da Queixa: ");
-                        
-                        Queixa queixa = dao.buscarQueixaPorId(idBuscar);
-                        if (queixa != null) {
-                            System.out.println("\nQueixa encontrada:");
-                            System.out.println(queixa);
-                        } else {
-                            System.out.println("Queixa não encontrada");
-                        }
-                        break;
-                        
-                    case 6:
-                        System.out.println("Saindo...");
-                        scanner.close();
-                        System.exit(0);
-                        break;
-                        
-                    default:
-                        System.out.println("Opção inválida! Digite de 1 a 6");
-                }
-            } catch (NumberFormatException e) {
-                System.err.println("Erro: Digite apenas números de 1 a 6");
-            } catch (Exception e) {
-                System.err.println("Erro inesperado: " + e.getMessage());
+  public Map<Integer, String> listarUsuariosRecentes() throws SQLException {
+    Map<Integer, String> usuarios = new LinkedHashMap<>();
+    String sql = "SELECT id_usuario, nome FROM usuarios ORDER BY id_usuario DESC LIMIT 20";
+    
+    try (Connection conn = Conexao.conectar();
+         PreparedStatement stmt = conn.prepareStatement(sql);
+         ResultSet rs = stmt.executeQuery()) {
+        
+        while (rs.next()) {
+            int id = rs.getInt("id_usuario");
+            String nome = rs.getString("nome");
+            
+            // Tratamento para nomes nulos ou vazios
+            if (nome == null || nome.trim().isEmpty()) {
+                nome = "Usuário " + id;
             }
+            
+            usuarios.put(id, nome);
         }
+    } catch (SQLException e) {
+        System.err.println("Erro ao listar usuários recentes: " + e.getMessage());
+        throw e; // Re-lança a exceção para ser tratada no servlet
     }
+    
+    return usuarios;
+}
 }

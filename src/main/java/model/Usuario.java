@@ -47,13 +47,14 @@ public class Usuario {
     }
 
     // Construtor com campos básicos
-    public Usuario(String nome, String email, String senha, String cargo, String perfil, String numero_identificacao) {
+    public Usuario(int id_usuario, String nome, String email, String senha, String cargo, String perfil, String numero_identificacao) {
         this.nome = nome;
         this.email = email;
         this.senha = senha;
         this.cargo = cargo;
         this.perfil = perfil;
         this.numero_identificacao = numero_identificacao;
+        this.id_usuario = id_usuario; 
         this.status = "Ativo"; // Valor padrão
     }
 
@@ -62,6 +63,7 @@ public class Usuario {
     public int getId_usuario() {
         return id_usuario;
     }
+   
 
     public void setId_usuario(int id_usuario) {
         this.id_usuario = id_usuario;

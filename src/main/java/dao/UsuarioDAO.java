@@ -61,6 +61,33 @@ public boolean ativarUsuario(int id) {
     }
 }
 
+
+ public boolean registrarAcesso(int idUsuario, boolean isLogin, String enderecoIP) throws SQLException {
+        String sql = isLogin 
+            ? "UPDATE usuarios SET ultimo_login = ?, ip_ultimo_login = ?, data_atualizacao = ? WHERE id_usuario = ?"
+            : "UPDATE usuarios SET data_atualizacao = ? WHERE id_usuario = ?";
+        
+        try (Connection conn = Conexao.conectar();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            
+            Timestamp agora = new Timestamp(System.currentTimeMillis());
+            
+            if (isLogin) {
+                stmt.setTimestamp(1, agora); // ultimo_login
+                stmt.setString(2, enderecoIP); // ip_ultimo_login
+                stmt.setTimestamp(3, agora); // data_atualizacao
+                stmt.setInt(4, idUsuario); // id_usuario
+            } else {
+                stmt.setTimestamp(1, agora); // data_atualizacao
+                stmt.setInt(2, idUsuario); // id_usuario
+            }
+            
+            int affectedRows = stmt.executeUpdate();
+            return affectedRows > 0;
+        }
+    }
+
+
 public boolean desativarUsuario(int id) {
     String sql = "UPDATE usuarios SET status = ? WHERE id_usuario = ?";
     
@@ -76,6 +103,64 @@ public boolean desativarUsuario(int id) {
     }
 }
     
+
+
+
+ public boolean registrarAcessoCompleto(int idUsuario, boolean isLogin, String enderecoIP) throws SQLException {
+        String sqlUsuario = "UPDATE usuarios SET data_atualizacao = ?" + 
+                          (isLogin ? ", ultimo_login = ?, ip_ultimo_login = ?" : "") + 
+                          " WHERE id_usuario = ?";
+        
+        String sqlHistorico = "INSERT INTO historico_acessos " +
+                            "(id_usuario, tipo_acesso, data_hora, endereco_ip) " +
+                            "VALUES (?, ?, ?, ?)";
+        
+        Connection conn = null;
+        try {
+            conn = Conexao.conectar();
+            conn.setAutoCommit(false); // Inicia transação
+            
+            // Atualiza tabela de usuários
+            try (PreparedStatement stmtUsuario = conn.prepareStatement(sqlUsuario)) {
+                Timestamp agora = new Timestamp(System.currentTimeMillis());
+                int paramIndex = 1;
+                
+                stmtUsuario.setTimestamp(paramIndex++, agora); // data_atualizacao
+                
+                if (isLogin) {
+                    stmtUsuario.setTimestamp(paramIndex++, agora); // ultimo_login
+                    stmtUsuario.setString(paramIndex++, enderecoIP); // ip_ultimo_login
+                }
+                
+                stmtUsuario.setInt(paramIndex, idUsuario); // id_usuario
+                stmtUsuario.executeUpdate();
+            }
+            
+            // Insere no histórico de acessos
+            try (PreparedStatement stmtHistorico = conn.prepareStatement(sqlHistorico)) {
+                stmtHistorico.setInt(1, idUsuario);
+                stmtHistorico.setString(2, isLogin ? "LOGIN" : "LOGOUT");
+                stmtHistorico.setTimestamp(3, new Timestamp(System.currentTimeMillis()));
+                stmtHistorico.setString(4, enderecoIP);
+                stmtHistorico.executeUpdate();
+            }
+            
+            conn.commit();
+            return true;
+        } catch (SQLException e) {
+            if (conn != null) {
+                conn.rollback();
+            }
+            throw e;
+        } finally {
+            if (conn != null) {
+                conn.setAutoCommit(true);
+                conn.close();
+            }
+        }
+    }
+
+
     
     // Enums mantidos da versão original
     public enum Cargo {

@@ -44,6 +44,21 @@ public class LoginServlet extends HttpServlet {
         super.init();
         this.usuarioDAO = new UsuarioDAO();
     }
+    
+     // Implementar o método redirecionarPorPerfil corretamente
+    private void redirecionarPorPerfil(HttpServletRequest request, HttpServletResponse response)
+            throws IOException, ServletException {
+        
+        HttpSession session = request.getSession(false);
+        if (session == null) {
+            response.sendRedirect(request.getContextPath() + "/login");
+            return;
+        }}
+    
+    
+    
+    
+    
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) 
@@ -139,35 +154,35 @@ public class LoginServlet extends HttpServlet {
     
     // ========== REDIRECIONAMENTO ==========
     
-    private void redirecionarPorPerfil(HttpServletRequest request, HttpServletResponse response)
-            throws IOException, ServletException {
-        
-        // TEMPORÁRIO: Redireciona todos para testpage
-        request.getRequestDispatcher(TEST_PAGE).forward(request, response);
-        
-        /* FUTURA IMPLEMENTAÇÃO:
-        HttpSession session = request.getSession(false);
-        if (session == null) {
-            response.sendRedirect(request.getContextPath() + "/login");
-            return;
-        }
-        
-        Usuario usuario = (Usuario) session.getAttribute("usuarioLogado");
-        if (usuario == null) {
-            response.sendRedirect(request.getContextPath() + "/login");
-            return;
-        }
-        
-        String paginaDestino = determinarPaginaPorPerfil(usuario.getPerfil());
-        
-        if (isRequisicaoAjax(request)) {
-            enviarRespostaJson(response, paginaDestino);
-        } else {
-            request.getRequestDispatcher(paginaDestino).forward(request, response);
-        }
-        */
-    }
-    
+//    private void redirecionarPorPerfil(HttpServletRequest request, HttpServletResponse response)
+//            throws IOException, ServletException {
+//        
+//        // TEMPORÁRIO: Redireciona todos para testpage
+//        request.getRequestDispatcher(TEST_PAGE).forward(request, response);
+//        
+//        /* FUTURA IMPLEMENTAÇÃO:
+//        HttpSession session = request.getSession(false);
+//        if (session == null) {
+//            response.sendRedirect(request.getContextPath() + "/login");
+//            return;
+//        }
+//        
+//        Usuario usuario = (Usuario) session.getAttribute("usuarioLogado");
+//        if (usuario == null) {
+//            response.sendRedirect(request.getContextPath() + "/login");
+//            return;
+//        }
+//        
+//        String paginaDestino = determinarPaginaPorPerfil(usuario.getPerfil());
+//        
+//        if (isRequisicaoAjax(request)) {
+//            enviarRespostaJson(response, paginaDestino);
+//        } else {
+//            request.getRequestDispatcher(paginaDestino).forward(request, response);
+//        }
+//        */
+//    }
+//    
     /* MÉTODOS PARA IMPLEMENTAÇÃO FUTURA:
     
     private String determinarPaginaPorPerfil(String perfil) {
