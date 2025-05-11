@@ -10,22 +10,42 @@ package model;
  */
 
 
+
 import java.util.Date;
+
 
 public class Suspeito {
     private int idSuspeito;
     private int idQueixa;
-    private String nome;
+    private Integer idCidadao;  // Pode ser null para suspeitos não identificados
     private String descricao;
-    private String genero;
-    private String dataNascimento;
-    private Integer idCidadao;
-    private String caminhoImagem;
+    private String papelIncidente;  // "Principal", "Cúmplice", "Acessório" ou "Testemunha"
     private Date dataRegistro;
+        private String cidadaoNome;
+    private String queixaDescricao;
+
+    public String getCidadaoNome() {
+        return cidadaoNome;
+    }
+
+    public void setCidadaoNome(String cidadaoNome) {
+        this.cidadaoNome = cidadaoNome;
+    }
+
+    public String getQueixaDescricao() {
+        return queixaDescricao;
+    }
+
+    public void setQueixaDescricao(String queixaDescricao) {
+        this.queixaDescricao = queixaDescricao;
+    }
+    
+    
 
     // Construtores
     public Suspeito() {
         this.dataRegistro = new Date();
+        this.papelIncidente = "Principal";  // Valor padrão
     }
 
     // Getters e Setters
@@ -45,12 +65,12 @@ public class Suspeito {
         this.idQueixa = idQueixa;
     }
 
-    public String getNome() {
-        return nome;
+    public Integer getIdCidadao() {
+        return idCidadao;
     }
 
-    public void setNome(String nome) {
-        this.nome = nome;
+    public void setIdCidadao(Integer idCidadao) {
+        this.idCidadao = idCidadao;
     }
 
     public String getDescricao() {
@@ -61,36 +81,21 @@ public class Suspeito {
         this.descricao = descricao;
     }
 
-    public String getGenero() {
-        return genero;
+    public String getPapelIncidente() {
+        return papelIncidente;
     }
 
-    public void setGenero(String genero) {
-        this.genero = genero;
-    }
-
-    public String getDataNascimento() {
-        return dataNascimento;
-    }
-
-    public void setDataNascimento(String dataNascimento) {
-        this.dataNascimento = dataNascimento;
-    }
-
-    public Integer getIdCidadao() {
-        return idCidadao;
-    }
-
-    public void setIdCidadao(Integer idCidadao) {
-        this.idCidadao = idCidadao;
-    }
-
-    public String getCaminhoImagem() {
-        return caminhoImagem;
-    }
-
-    public void setCaminhoImagem(String caminhoImagem) {
-        this.caminhoImagem = caminhoImagem;
+    public void setPapelIncidente(String papelIncidente) {
+        if (papelIncidente == null || 
+            papelIncidente.isEmpty() ||
+            (!papelIncidente.equals("Principal") && 
+             !papelIncidente.equals("Cúmplice") && 
+             !papelIncidente.equals("Acessório") && 
+             !papelIncidente.equals("Testemunha"))) {
+            this.papelIncidente = "Principal";
+        } else {
+            this.papelIncidente = papelIncidente;
+        }
     }
 
     public Date getDataRegistro() {
@@ -103,9 +108,10 @@ public class Suspeito {
 
     @Override
     public String toString() {
-        return String.format("Suspeito [ID=%d, Queixa=%d, Nome=%s, Gênero=%s, Nascimento=%s, Cidadão=%s, Imagem=%s]",
-                idSuspeito, idQueixa, nome, genero, dataNascimento, 
-                idCidadao != null ? idCidadao : "N/A",
-                caminhoImagem != null ? caminhoImagem.substring(caminhoImagem.lastIndexOf("\\") + 1) : "Nenhuma");
+        return String.format("Suspeito [ID=%d, Queixa=%d, Cidadão=%s, Papel=%s]",
+                idSuspeito, 
+                idQueixa, 
+                idCidadao != null ? idCidadao : "Não identificado",
+                papelIncidente);
     }
 }
