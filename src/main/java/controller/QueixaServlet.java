@@ -33,6 +33,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.time.LocalDate;
 import java.sql.SQLException;
+import java.sql.Timestamp;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import model.Conexao;
@@ -160,19 +161,19 @@ public class QueixaServlet extends HttpServlet {
     }
 
     private void viewQueixa(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException, SQLException {
-        int id = Integer.parseInt(request.getParameter("id"));
-        Queixa queixa = queixaDAO.buscarQueixaPorId(id);
-        
-        if (queixa == null) {
-            response.sendError(HttpServletResponse.SC_NOT_FOUND, "Queixa não encontrada");
-            return;
-        }
-        
-        request.setAttribute("queixa", queixa);
-        RequestDispatcher dispatcher = request.getRequestDispatcher("/WEB-INF/views/queixas/verQueixas.jsp");
-        dispatcher.forward(request, response);
+        throws ServletException, IOException, SQLException {
+    int id = Integer.parseInt(request.getParameter("id"));
+    Queixa queixa = queixaDAO.buscarQueixaComRelacionamentos(id);
+    
+    if (queixa == null) {
+        response.sendError(HttpServletResponse.SC_NOT_FOUND, "Queixa não encontrada");
+        return;
     }
+    
+    request.setAttribute("queixa", queixa);
+    RequestDispatcher dispatcher = request.getRequestDispatcher("/WEB-INF/views/queixas/verQueixas.jsp");
+    dispatcher.forward(request, response);
+}
 
    private void insertQueixa(HttpServletRequest request, HttpServletResponse response)
         throws IOException, ServletException, SQLException {
@@ -288,4 +289,7 @@ private void loadDropdownData(HttpServletRequest request) throws SQLException {
         request.setAttribute("error", "Erro no banco de dados: " + e.getMessage());
         request.getRequestDispatcher("/WEB-INF/views/queixas/error.jsp").forward(request, response);
     }
+    
+
+    
 }

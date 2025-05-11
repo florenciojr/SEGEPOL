@@ -9,8 +9,10 @@ package model;
  * @author JR5
  */
 
-
+import java.sql.Date;
+import java.sql.Timestamp;
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 
 public class Queixa {
     private int idQueixa;
@@ -30,6 +32,9 @@ public class Queixa {
     private String nomeUsuario;
     private String nomeTipoQueixa;
     private String gravidadeTipo;
+    
+
+
 
     public String getNomeCidadao() {
         return nomeCidadao;
@@ -174,4 +179,26 @@ public class Queixa {
                 ", idUsuario=" + idUsuario +
                 '}';
     }
+    
+public String getDataIncidenteFormatada() {
+    if (this.dataIncidente == null) return "";
+    // Remova o HH:mm pois LocalDate não tem informação de hora
+    return this.dataIncidente.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+}
+
+public String getDataRegistroFormatada() {
+    if (this.dataRegistro == null) return "";
+    // Remova o HH:mm pois LocalDate não tem informação de hora
+    return this.dataRegistro.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+}
+    public Date getDataIncidenteAsDate() {
+        return this.dataIncidente != null ? 
+               java.sql.Date.valueOf(this.dataIncidente) : null;
+    }
+
+    public Date getDataRegistroAsDate() {
+        return this.dataRegistro != null ? 
+               java.sql.Date.valueOf(this.dataRegistro) : null;
+    }
+
 }

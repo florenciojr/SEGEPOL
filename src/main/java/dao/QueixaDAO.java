@@ -98,49 +98,67 @@ public Map<Integer, String> listarCidadaosRecentes() throws SQLException {
         return inserirQueixa(queixa);
     }
 
-    // Método para listagem com paginação
-    public List<Queixa> listarQueixasPaginado(int pagina, int itensPorPagina) {
-        List<Queixa> queixas = new ArrayList<>();
-        String sql = "SELECT * FROM queixas ORDER BY data_registro DESC LIMIT ?, ?";
-        
-        try (Connection conn = Conexao.conectar();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-            
-            stmt.setInt(1, (pagina - 1) * itensPorPagina);
-            stmt.setInt(2, itensPorPagina);
-            
-            ResultSet rs = stmt.executeQuery();
-            while (rs.next()) {
-                Queixa queixa = mapearQueixa(rs);
-                queixas.add(queixa);
-            }
-        } catch (SQLException e) {
-            System.err.println("Erro ao listar queixas paginadas: " + e.getMessage());
-        }
-        return queixas;
-    }
 
-    // Método auxiliar para mapear ResultSet para objeto Queixa
-    private Queixa mapearQueixa(ResultSet rs) throws SQLException {
-        Queixa queixa = new Queixa();
-        queixa.setIdQueixa(rs.getInt("id_queixa"));
-        queixa.setTitulo(rs.getString("titulo"));
-        queixa.setDescricao(rs.getString("descricao"));
+// No método listarQueixasPaginado()
+public List<Queixa> listarQueixasPaginado(int pagina, int itensPorPagina) {
+    List<Queixa> queixas = new ArrayList<>();
+    String sql = "SELECT q.*, c.nome AS nome_cidadao, t.nome_tipo AS nome_tipo_queixa, u.nome AS nome_usuario " +
+                 "FROM queixas q " +
+                 "LEFT JOIN cidadaos c ON q.id_cidadao = c.id_cidadao " +
+                 "LEFT JOIN tipos_queixa t ON q.id_tipo = t.id_tipo " +
+                 "LEFT JOIN usuarios u ON q.id_usuario = u.id_usuario " +
+                 "ORDER BY q.data_registro DESC LIMIT ?, ?";
+    
+    try (Connection conn = Conexao.conectar();
+         PreparedStatement stmt = conn.prepareStatement(sql)) {
         
-        Timestamp timestamp = rs.getTimestamp("data_incidente");
-        if (timestamp != null) {
-            queixa.setDataIncidente(timestamp.toLocalDateTime().toLocalDate());
+        stmt.setInt(1, (pagina - 1) * itensPorPagina);
+        stmt.setInt(2, itensPorPagina);
+        
+        ResultSet rs = stmt.executeQuery();
+        while (rs.next()) {
+            queixas.add(mapearQueixa(rs));
         }
-        
-        queixa.setDataRegistro(rs.getTimestamp("data_registro").toLocalDateTime().toLocalDate());
-        queixa.setLocalIncidente(rs.getString("local_incidente"));
-        queixa.setCoordenadas(rs.getString("coordenadas"));
-        queixa.setStatus(rs.getString("status"));
-        queixa.setIdCidadao(rs.getInt("id_cidadao"));
-        queixa.setIdTipo(rs.getInt("id_tipo"));
-        queixa.setIdUsuario(rs.getInt("id_usuario"));
-        return queixa;
+    } catch (SQLException e) {
+        System.err.println("Erro ao listar queixas paginadas: " + e.getMessage());
     }
+    return queixas;
+}
+
+private Queixa mapearQueixa(ResultSet rs) throws SQLException {
+    Queixa queixa = new Queixa();
+    queixa.setIdQueixa(rs.getInt("id_queixa"));
+    queixa.setTitulo(rs.getString("titulo"));
+    queixa.setDescricao(rs.getString("descricao"));
+    
+    // Conversão correta para LocalDate
+    Timestamp timestampIncidente = rs.getTimestamp("data_incidente");
+    if (timestampIncidente != null) {
+        queixa.setDataIncidente(timestampIncidente.toLocalDateTime().toLocalDate());
+    }
+    
+    Timestamp timestampRegistro = rs.getTimestamp("data_registro");
+    if (timestampRegistro != null) {
+        queixa.setDataRegistro(timestampRegistro.toLocalDateTime().toLocalDate());
+    }
+    
+    queixa.setLocalIncidente(rs.getString("local_incidente"));
+    queixa.setCoordenadas(rs.getString("coordenadas"));
+    queixa.setStatus(rs.getString("status"));
+    queixa.setIdCidadao(rs.getInt("id_cidadao"));
+    queixa.setIdTipo(rs.getInt("id_tipo"));
+    queixa.setIdUsuario(rs.getInt("id_usuario"));
+    
+    try {
+        queixa.setNomeCidadao(rs.getString("nome_cidadao"));
+        queixa.setNomeTipoQueixa(rs.getString("nome_tipo"));
+        queixa.setNomeUsuario(rs.getString("nome_usuario"));
+    } catch (SQLException e) {
+        // Campos podem não estar presentes em todas as consultas
+    }
+    
+    return queixa;
+}
 
     // Método para verificar se um registro existe
     private boolean existeRegistro(String tabela, String campo, int id) {
@@ -239,45 +257,49 @@ public Map<Integer, String> listarCidadaosRecentes() throws SQLException {
     }
 
     // Listar todas as queixas
-    public List<Queixa> listarQueixas() {
-        List<Queixa> queixas = new ArrayList<>();
-        String sql = "SELECT * FROM queixas ORDER BY data_registro DESC";
+public List<Queixa> listarQueixas() throws SQLException {
+    List<Queixa> queixas = new ArrayList<>();
+    String sql = "SELECT q.*, c.nome AS nome_cidadao, t.nome_tipo AS nome_tipo_queixa, u.nome AS nome_usuario " +
+                 "FROM queixas q " +
+                 "LEFT JOIN cidadaos c ON q.id_cidadao = c.id_cidadao " +
+                 "LEFT JOIN tipos_queixa t ON q.id_tipo = t.id_tipo " +
+                 "LEFT JOIN usuarios u ON q.id_usuario = u.id_usuario " +
+                 "ORDER BY q.data_registro DESC";
 
-        try (Connection conn = Conexao.conectar();
-             Statement stmt = conn.createStatement();
-             ResultSet rs = stmt.executeQuery(sql)) {
-
-            while (rs.next()) {
-                Queixa queixa = mapearQueixa(rs);
-                queixas.add(queixa);
-            }
-        } catch (SQLException e) {
-            System.err.println("Erro ao listar queixas: " + e.getMessage());
+    try (Connection conn = Conexao.conectar();
+         Statement stmt = conn.createStatement();
+         ResultSet rs = stmt.executeQuery(sql)) {
+        while (rs.next()) {
+            queixas.add(this.mapearQueixa(rs)); // Chamada explícita
         }
-        return queixas;
     }
+    return queixas;
+}
+
+
 
     // Buscar queixa por ID
-    public Queixa buscarQueixaPorId(int id) {
-        String sql = "SELECT * FROM queixas WHERE id_queixa = ?";
-
-        try (Connection conn = Conexao.conectar();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-            
-            stmt.setInt(1, id);
-            ResultSet rs = stmt.executeQuery();
-
-            if (rs.next()) {
-                return mapearQueixa(rs);
-            }
-        } catch (SQLException e) {
-            System.err.println("Erro ao buscar queixa: " + e.getMessage());
+public Queixa buscarQueixaPorId(int id) throws SQLException {
+    String sql = "SELECT q.*, c.nome AS nome_cidadao, t.nome_tipo AS nome_tipo_queixa, u.nome AS nome_usuario " +
+                 "FROM queixas q " +
+                 "LEFT JOIN cidadaos c ON q.id_cidadao = c.id_cidadao " +
+                 "LEFT JOIN tipos_queixa t ON q.id_tipo = t.id_tipo " +
+                 "LEFT JOIN usuarios u ON q.id_usuario = u.id_usuario " +
+                 "WHERE q.id_queixa = ?";
+    
+    try (Connection conn = Conexao.conectar();
+         PreparedStatement stmt = conn.prepareStatement(sql)) {
+        stmt.setInt(1, id);
+        ResultSet rs = stmt.executeQuery();
+        if (rs.next()) {
+            return this.mapearQueixa(rs); // Chamada explícita
         }
-        return null;
     }
+    return null;
+}
 
     // Atualizar queixa
-    public boolean atualizarQueixa(Queixa queixa) {
+    public boolean atualizarQueixa(Queixa queixa) throws SQLException {
         if (buscarQueixaPorId(queixa.getIdQueixa()) == null) {
             System.err.println("Erro: Queixa não encontrada");
             return false;
@@ -384,5 +406,26 @@ public Map<Integer, String> listarCidadaosRecentes() throws SQLException {
     }
     
     return usuarios;
+}
+  
+ public Queixa buscarQueixaComRelacionamentos(int id) throws SQLException {
+    String sql = "SELECT q.*, c.nome AS nome_cidadao, t.nome_tipo, u.nome AS nome_usuario " +
+                 "FROM queixas q " +
+                 "LEFT JOIN cidadaos c ON q.id_cidadao = c.id_cidadao " +
+                 "LEFT JOIN tipos_queixa t ON q.id_tipo = t.id_tipo " +
+                 "LEFT JOIN usuarios u ON q.id_usuario = u.id_usuario " +
+                 "WHERE q.id_queixa = ?";
+
+    try (Connection conn = Conexao.conectar();
+         PreparedStatement stmt = conn.prepareStatement(sql)) {
+        
+        stmt.setInt(1, id);
+        ResultSet rs = stmt.executeQuery();
+
+        if (rs.next()) {
+            return mapearQueixa(rs);
+        }
+    }
+    return null;
 }
 }
