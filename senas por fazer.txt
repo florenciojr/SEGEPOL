@@ -45,3 +45,6 @@ CREATE TABLE intimacoes (
     FOREIGN KEY (id_usuario) REFERENCES agentes(id),
     FOREIGN KEY (id_queixa) REFERENCES ocorrencias(id)
 );
+
+
+criar uma Tabela para reclamocoes, onde posso Cadastrar queixas de corupcao agressão por parte da polícia e outros 
