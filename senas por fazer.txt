@@ -48,3 +48,43 @@ CREATE TABLE intimacoes (
 
 
 criar uma Tabela para reclamocoes, onde posso Cadastrar queixas de corupcao agressão por parte da polícia e outros 
+
+
+Ótimo ponto! Se o agente não está cadastrado no sistema (por exemplo, é de outra esquadra ou ainda não foi inserido), é melhor permitir que o reclamante informe apenas o nome ou o número de identificação do agente como texto livre. Assim, a reclamação continua sendo registrada mesmo sem a referência direta a um id_agentes
+
+
+Tabela SQL atualizada: reclamacoes
+
+CREATE TABLE reclamacoes (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    id_cidadao INT,
+    tipo_reclamacao VARCHAR(100), -- Ex: "Contra Polícia", "Serviço", "Outros"
+    nome_agente_reclamado VARCHAR(255), -- Nome do agente ou pessoa reclamada
+    numero_id_agente VARCHAR(100), -- Ex: Número da farda ou identificação (opcional)
+    descricao TEXT,
+    data_reclamacao DATE,
+    status VARCHAR(50) DEFAULT 'Pendente', -- Pendente, Resolvida, Em Análise
+    resposta TEXT,
+
+    FOREIGN KEY (id_cidadao) REFERENCES cidadaos(id)
+);
+
+
+---
+
+Vantagens desse modelo:
+
+Não obriga o uso de id_agente como chave estrangeira.
+
+Permite registrar reclamações mesmo que o agente ainda não esteja no sistema.
+
+Dá flexibilidade para incluir qualquer nome ou número informado pelo cidadão.
+
+
+
+---
+
+Se no futuro quiseres associar essas reclamações a agentes reais do sistema, podes criar um campo extra para id_agente_confirmado quando for possível fazer o vínculo.
+
+Queres que eu também prepare um formulário (JSP) para inserir essas reclamações?
+
