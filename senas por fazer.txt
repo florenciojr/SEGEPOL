@@ -1,4 +1,4 @@
-# DICA PARA IMPLEMENTAÇÃO FUTURA - SOFT DELETE
+7# DICA PARA IMPLEMENTAÇÃO FUTURA - SOFT DELETE
 
 1. ADICIONE ESTAS COLUNAS EM TODAS AS TABELAS:
    - is_deleted TINYINT(1) DEFAULT 0
@@ -28,3 +28,20 @@
 2. Adicionar colunas em todas tabelas
 3. Modificar todos os DAOs
 4. Testar exaustivamente
+
+
+CREATE TABLE intimacoes (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    id_cidadao INT,
+    id_usuario INT,
+    id_queixa INT,
+    motivo TEXT,
+    data_emissao DATE,
+    data_comparecimento DATE,
+    local_comparecimento VARCHAR(255),
+    status VARCHAR(50),
+    observacoes TEXT,
+    FOREIGN KEY (id_cidadao) REFERENCES cidadaos(id),
+    FOREIGN KEY (id_usuario) REFERENCES agentes(id),
+    FOREIGN KEY (id_queixa) REFERENCES ocorrencias(id)
+);
