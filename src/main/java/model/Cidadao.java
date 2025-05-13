@@ -34,6 +34,7 @@ public class Cidadao {
     private String provincia;
     private String caminhoImagem;
     private LocalDateTime dataRegistro;
+        private String classificacao;
 
     // Construtores
     public Cidadao() {
@@ -42,7 +43,7 @@ public class Cidadao {
     public Cidadao(int idCidadao, String nome, String genero, LocalDate dataNascimento, 
                   String documentoIdentificacao, String tipoDocumento, String telefone, 
                   String email, String naturalidade, String rua, String bairro, 
-                  String cidade, String provincia, String caminhoImagem, 
+                  String cidade, String provincia, String caminhoImagem, String classificacao, 
                    LocalDateTime dataRegistro) {
         this.idCidadao = idCidadao;
         this.nome = nome;
@@ -183,6 +184,13 @@ public class Cidadao {
     public void setDataRegistro(LocalDateTime dataRegistro) {
         this.dataRegistro = dataRegistro;
     }
+        public String getClassificacao() {
+        return classificacao;
+    }
+
+    public void setClassificacao(String classificacao) {
+        this.classificacao = classificacao;
+    }
 
     // Método toString para representação textual do objeto
     @Override
@@ -203,6 +211,11 @@ public class Cidadao {
                 ", provincia='" + provincia + '\'' +
                 ", caminhoImagem='" + caminhoImagem + '\'' +
                 ", dataRegistro=" + dataRegistro +
+                ", classificacao='" + classificacao + '\'' +
                 '}';
+    }
+
+    public void setCaracteristicasFisicas(String trim) {
+        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
     }
 }

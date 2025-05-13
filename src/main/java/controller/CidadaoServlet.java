@@ -17,6 +17,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.sql.SQLException;
 import java.time.LocalDate;
 import java.util.List;
 import javax.servlet.ServletException;
@@ -45,13 +46,21 @@ public class CidadaoServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+       
         String action = request.getParameter("action");
+        
         
         if (action == null) {
             action = "listar";
         }
+        
+        
 
         try {
+            
+            // Obter classificações disponíveis do banco de dados
+List<String> classificacoes = cidadaoDAO.getClassificacoesDisponiveis();
+request.setAttribute("classificacoes", classificacoes);
             switch (action) {
                 case "buscarPorNome":
                     buscarCidadaosPorNome(request, response);
@@ -105,12 +114,16 @@ public class CidadaoServlet extends HttpServlet {
         }
     }
 
-    private void listarCidadaos(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        request.setAttribute("cidadaos", cidadaoDAO.listarCidadaos());
-        request.getRequestDispatcher("/WEB-INF/views/cidadaos/listarCidadaos.jsp").forward(request, response);
-    }
-
+ private void listarCidadaos(HttpServletRequest request, HttpServletResponse response)
+        throws ServletException, IOException, SQLException {
+    // Obter classificações disponíveis do banco de dados
+    List<String> classificacoes = cidadaoDAO.getClassificacoesDisponiveis();
+    request.setAttribute("classificacoes", classificacoes);
+    
+    // Obter lista de cidadãos
+    request.setAttribute("cidadaos", cidadaoDAO.listarCidadaos());
+    request.getRequestDispatcher("/WEB-INF/views/cidadaos/listarCidadaos.jsp").forward(request, response);
+}
     private void mostrarFormulario(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         request.getRequestDispatcher("/WEB-INF/views/cidadaos/formCidadao.jsp").forward(request, response);
@@ -217,8 +230,10 @@ public class CidadaoServlet extends HttpServlet {
         cidadao.setRua(request.getParameter("rua"));
         cidadao.setBairro(request.getParameter("bairro"));
         cidadao.setCidade(request.getParameter("cidade"));
-        cidadao.setProvincia(request.getParameter("provincia"));
-        return cidadao;
+cidadao.setClassificacao(request.getParameter("classificacao"));
+
+    return cidadao;
+
     }
     
     private String processarUploadImagem(Part filePart, HttpServletRequest request) throws IOException {

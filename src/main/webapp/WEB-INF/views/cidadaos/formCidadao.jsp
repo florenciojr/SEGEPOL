@@ -12,19 +12,18 @@
     // Definindo listas de opções que serão usadas nos selects
     List<String> generos = Arrays.asList("Masculino", "Feminino", "Outro");
     List<String> tiposDocumento = Arrays.asList("BI", "Passaporte", "Carta de Condução", "Outro");
+    List<String> classificacoes = Arrays.asList("Comum", "Vitima", "Suspeito", "Testemunha", "Informante", "Denunciante", "Detido");
     
     request.setAttribute("generos", generos);
     request.setAttribute("tiposDocumento", tiposDocumento);
+    request.setAttribute("classificacoes", classificacoes);
 %>
 <!DOCTYPE html>
 <html>
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     <title>${cidadao == null ? 'Novo Cidadão' : 'Editar Cidadão'} | PRM</title>
-    <!-- Adicionando Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Font Awesome para ícones -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <%@include file="/WEB-INF/views/templates/header.jsp" %>
     <style>
         :root {
             --prm-verde: #006633;
@@ -56,6 +55,10 @@
             margin-bottom: 30px;
             text-transform: uppercase;
             font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
         }
         
         .section-title {
@@ -66,6 +69,9 @@
             font-size: 1.2rem;
             text-transform: uppercase;
             letter-spacing: 0.5px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
         
         .form-label {
@@ -85,11 +91,15 @@
             font-weight: 600;
             letter-spacing: 0.5px;
             padding: 10px 25px;
+            border: none;
+            border-radius: 4px;
+            transition: all 0.3s;
         }
         
         .btn-prm:hover {
             background-color: #005a2b;
             color: white;
+            transform: translateY(-2px);
         }
         
         .photo-container {
@@ -102,19 +112,22 @@
             cursor: pointer;
             overflow: hidden;
             background-color: #f8f9fa;
+            transition: all 0.3s;
         }
         
         .photo-container:hover {
             border-color: var(--prm-verde);
+            box-shadow: 0 0 10px rgba(0, 102, 51, 0.2);
         }
         
         .photo-preview {
             max-width: 100%;
             max-height: 100%;
             display: none;
+            object-fit: cover;
         }
         
-        .form-control:focus {
+        .form-control:focus, .form-select:focus {
             border-color: var(--prm-verde);
             box-shadow: 0 0 0 0.25rem rgba(0, 102, 51, 0.25);
         }
@@ -127,19 +140,81 @@
             color: #dc3545;
             font-size: 0.875em;
         }
+
+        /* Estilos para as classificações */
+        .classification-comum {
+            background-color: #6c757d;
+            color: white;
+        }
+
+        .classification-vitima {
+            background-color: #dc3545;
+            color: white;
+        }
+
+        .classification-suspeito {
+            background-color: #fd7e14;
+            color: black;
+        }
+
+        .classification-testemunha {
+            background-color: #17a2b8;
+            color: white;
+        }
+
+        .classification-informante {
+            background-color: #28a745;
+            color: white;
+        }
+
+        .classification-denunciante {
+            background-color: #6610f2;
+            color: white;
+        }
+
+        .classification-detido {
+            background-color: #212529;
+            color: white;
+        }
+
+        /* Badge de status */
+        .status-badge {
+            font-size: 0.8rem;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+
+        /* Responsividade */
+        @media (max-width: 768px) {
+            .form-container {
+                padding: 20px;
+            }
+            
+            .header-title {
+                font-size: 1.5rem;
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            .photo-container {
+                height: 150px;
+                margin-bottom: 15px;
+            }
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="form-container">
-            <h1 class="header-title text-center mb-4">
+            <h1 class="header-title">
+                <i class="fas fa-user-edit"></i>
                 ${cidadao == null ? 'Cadastrar Novo Cidadão' : 'Editar Cadastro'}
-                <span class="badge rounded-pill ms-2 ${cidadao == null ? 'bg-danger' : 'bg-warning text-dark'}">
+                <span class="status-badge ms-2 badge rounded-pill ${cidadao == null ? 'bg-danger' : 'bg-warning text-dark'}">
                     ${cidadao == null ? 'NOVO' : 'EDIÇÃO'}
                 </span>
             </h1>
             
-            <form action="${pageContext.request.contextPath}/cidadao" method="POST" enctype="multipart/form-data">
+            <form action="${pageContext.request.contextPath}/cidadao" method="POST" enctype="multipart/form-data" onsubmit="return validarFormulario()">
                 <input type="hidden" name="action" value="${cidadao == null ? 'salvar' : 'atualizar'}">
                 
                 <c:if test="${cidadao != null}">
@@ -147,7 +222,9 @@
                 </c:if>
                 
                 <!-- Seção: Dados Pessoais -->
-                <h3 class="section-title"><i class="fas fa-user me-2"></i>Dados Pessoais</h3>
+                <h3 class="section-title">
+                    <i class="fas fa-user"></i>Dados Pessoais
+                </h3>
                 
                 <div class="row mb-4">
                     <!-- Foto -->
@@ -162,6 +239,7 @@
                                 </c:if>
                             </div>
                             <input type="file" id="imagem" name="imagem" accept="image/*" class="d-none">
+                            <small class="text-muted">Formatos: JPG, PNG (Max. 2MB)</small>
                         </div>
                     </div>
                     
@@ -226,8 +304,32 @@
                     </div>
                 </div>
                 
+                <!-- Seção: Classificação -->
+                <h3 class="section-title">
+                    <i class="fas fa-tag"></i>Classificação
+                </h3>
+                
+                <div class="row mb-4">
+                    <div class="col-md-6 mb-3">
+                        <label for="classificacao" class="form-label required-label">Classificação</label>
+                        <select class="form-select" id="classificacao" name="classificacao" required>
+                            <option value="">Selecione uma classificação...</option>
+                            <c:forEach items="${classificacoes}" var="classificacao">
+                                <option value="${classificacao}" 
+                                    ${cidadao.classificacao == classificacao ? 'selected' : ''}
+                                    class="${'classification-' += classificacao.toLowerCase()}">
+                                    ${classificacao}
+                                </option>
+                            </c:forEach>
+                        </select>
+                        <div class="invalid-feedback">Este campo é obrigatório</div>
+                    </div>
+                </div>
+                
                 <!-- Seção: Contato -->
-                <h3 class="section-title"><i class="fas fa-phone-alt me-2"></i>Contato</h3>
+                <h3 class="section-title">
+                    <i class="fas fa-phone-alt"></i>Contato
+                </h3>
                 
                 <div class="row">
                     <div class="col-md-6 mb-3">
@@ -244,7 +346,9 @@
                 </div>
                 
                 <!-- Seção: Endereço -->
-                <h3 class="section-title"><i class="fas fa-map-marker-alt me-2"></i>Endereço Residencial</h3>
+                <h3 class="section-title">
+                    <i class="fas fa-map-marker-alt"></i>Endereço Residencial
+                </h3>
                 
                 <div class="row">
                     <div class="col-md-6 mb-3">
@@ -285,10 +389,7 @@
         </div>
     </div>
 
-    <!-- Bootstrap JS Bundle with Popper -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <!-- Font Awesome para ícones -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
+    <%@include file="/WEB-INF/views/templates/footer.jsp" %>
     
     <script>
         // Máscara para telefone
@@ -308,6 +409,12 @@
         photoInput.addEventListener('change', (e) => {
             const file = e.target.files[0];
             if (file) {
+                // Verificar tamanho do arquivo (max 2MB)
+                if (file.size > 2 * 1024 * 1024) {
+                    alert('O tamanho máximo da imagem é 2MB');
+                    return;
+                }
+                
                 const reader = new FileReader();
                 reader.onload = (event) => {
                     if (!photoPreview) {
@@ -335,7 +442,7 @@
                 fetch('${pageContext.request.contextPath}/cidadao?action=verificarDocumento&documento=' + documento)
                     .then(response => response.json())
                     .then(data => {
-                        if (data.existe) {
+                        if (data.existe && ${cidadao == null ? 'true' : 'data.id != ' + cidadao.idCidadao}) {
                             alert('Este documento já está cadastrado no sistema!');
                             document.getElementById('documentoIdentificacao').focus();
                         }
@@ -343,10 +450,10 @@
             }
         });
 
-        // Validação do formulário antes de enviar
-        document.querySelector('form').addEventListener('submit', function(e) {
-            const requiredFields = this.querySelectorAll('[required]');
+        // Validação do formulário
+        function validarFormulario() {
             let isValid = true;
+            const requiredFields = document.querySelectorAll('[required]');
             
             requiredFields.forEach(field => {
                 if (!field.value.trim()) {
@@ -357,18 +464,29 @@
                 }
             });
             
-            if (!isValid) {
-                e.preventDefault();
-                alert('Por favor, preencha todos os campos obrigatórios!');
+            // Validação específica para classificação
+            const classificacao = document.getElementById('classificacao');
+            if (classificacao.value === "") {
+                classificacao.classList.add('is-invalid');
+                isValid = false;
+            } else {
+                classificacao.classList.remove('is-invalid');
             }
-        });
+            
+            if (!isValid) {
+                alert('Por favor, preencha todos os campos obrigatórios!');
+                return false;
+            }
+            
+            return true;
+        }
         
         // Foco no primeiro campo ao carregar a página
         document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('nome').focus();
             
             // Se já existir uma foto, mostra o preview
-            if (photoPreview) {
+            if (photoPreview && photoPreview.src) {
                 photoPreview.style.display = 'block';
                 photoIcon.style.display = 'none';
             }

@@ -119,6 +119,24 @@
                             </li>
                         </ul>
                     </li>
+
+
+  <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                        <i class="fas fa-users-cog me-1"></i> Usuários
+                    </a>
+
+<ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="${pageContext.request.contextPath}/usuarios?action=novo">
+                            <i class="fas fa-user-plus text-success me-1"></i> Auto de noticia = agente vai reportar o acontecimento
+                        </a></li>
+                        <li><a class="dropdown-item" href="${pageContext.request.contextPath}/usuarios?action=list">
+                            <i class="fas fa-list text-primary me-1"></i> Auto de denuncia = o cidadao lesado vai fazer a denuncia
+                        </a></li>
+                    </ul>
+
+
+
                     
                     <!-- Item Viaturas -->
                     <li class="nav-item">
