@@ -88,3 +88,168 @@ Se no futuro quiseres associar essas reclamações a agentes reais do sistema, p
 
 Queres que eu também prepare um formulário (JSP) para inserir essas reclamações?
 
+
+
+
+
+
+
+
+
+
+
+
+
+Scripts SQL para Adição de Província e Cidade nas Tabelas do SIGEPOL
+Os comandos abaixo adicionam os campos 'província' e 'cidade' nas principais tabelas do sistema SIGEPOL. Os valores foram definidos com ENUM contendo as províncias e cidades principais de Moçambique.
+
+
+
+Tabela `usuarios`
+ALTER TABLE usuarios
+ADD COLUMN provincia ENUM(
+  'Cabo Delgado', 'Gaza', 'Inhambane', 'Manica', 'Maputo Cidade', 'Maputo Província',
+  'Nampula', 'Niassa', 'Sofala', 'Tete', 'Zambézia'
+),
+ADD COLUMN cidade ENUM(
+  'Pemba', 'Xai-Xai', 'Inhambane', 'Chimoio', 'Maputo', 'Matola',
+  'Nampula', 'Lichinga', 'Beira', 'Tete', 'Quelimane'
+);
+Tabela `queixas`
+ALTER TABLE queixas
+ADD COLUMN provincia_ocorrencia ENUM(
+  'Cabo Delgado', 'Gaza', 'Inhambane', 'Manica', 'Maputo Cidade', 'Maputo Província',
+  'Nampula', 'Niassa', 'Sofala', 'Tete', 'Zambézia'
+),
+ADD COLUMN cidade_ocorrencia ENUM(
+  'Pemba', 'Xai-Xai', 'Inhambane', 'Chimoio', 'Maputo', 'Matola',
+  'Nampula', 'Lichinga', 'Beira', 'Tete', 'Quelimane'
+);
+Tabela `vitimas`
+ALTER TABLE vitimas
+ADD COLUMN provincia ENUM(
+  'Cabo Delgado', 'Gaza', 'Inhambane', 'Manica', 'Maputo Cidade', 'Maputo Província',
+  'Nampula', 'Niassa', 'Sofala', 'Tete', 'Zambézia'
+),
+ADD COLUMN cidade ENUM(
+  'Pemba', 'Xai-Xai', 'Inhambane', 'Chimoio', 'Maputo', 'Matola',
+  'Nampula', 'Lichinga', 'Beira', 'Tete', 'Quelimane'
+);
+Tabela `suspeitos`
+ALTER TABLE suspeitos
+ADD COLUMN provincia ENUM(
+  'Cabo Delgado', 'Gaza', 'Inhambane', 'Manica', 'Maputo Cidade', 'Maputo Província',
+  'Nampula', 'Niassa', 'Sofala', 'Tete', 'Zambézia'
+),
+ADD COLUMN cidade ENUM(
+  'Pemba', 'Xai-Xai', 'Inhambane', 'Chimoio', 'Maputo', 'Matola',
+  'Nampula', 'Lichinga', 'Beira', 'Tete', 'Quelimane'
+);
+Tabela `policiais`
+ALTER TABLE policiais
+ADD COLUMN provincia ENUM(
+  'Cabo Delgado', 'Gaza', 'Inhambane', 'Manica', 'Maputo Cidade', 'Maputo Província',
+  'Nampula', 'Niassa', 'Sofala', 'Tete', 'Zambézia'
+),
+ADD COLUMN cidade ENUM(
+  'Pemba', 'Xai-Xai', 'Inhambane', 'Chimoio', 'Maputo', 'Matola',
+  'Nampula', 'Lichinga', 'Beira', 'Tete', 'Quelimane'
+);
+Tabela `profissionais`
+ALTER TABLE profissionais
+ADD COLUMN provincia ENUM(
+  'Cabo Delgado', 'Gaza', 'Inhambane', 'Manica', 'Maputo Cidade', 'Maputo Província',
+  'Nampula', 'Niassa', 'Sofala', 'Tete', 'Zambézia'
+),
+ADD COLUMN cidade ENUM(
+  'Pemba', 'Xai-Xai', 'Inhambane', 'Chimoio', 'Maputo', 'Matola',
+  'Nampula', 'Lichinga', 'Beira', 'Tete', 'Quelimane'
+);
+
+
+
+
+Perfeito, recebida uma parte importante das estruturas e amostras da base de dados do projeto SIGEPOL. Aqui vai uma análise direta e objetiva:
+
+
+
+Análise Técnica Rápida
+
+1.	Tabelas bem estruturadas:
+
+As tabelas estão seguindo um modelo relacional adequado.
+
+Há uso de FOREIGN KEYS implícitas (como id_cidadao, id_queixa, id_usuario_responsavel) — é bom garantir que estejam definidas como chaves estrangeiras no banco.
+
+Uso correto de enums para categorizar tipos e status.
+
+
+2.	Redundância potencial:
+
+A tabela cidadaos já contém o campo classificacao, mas há também uma tabela classificacoes_cidadao. Isso pode gerar inconsistência. Sugestão:
+
+Deixar o campo classificacao apenas em classificacoes_cidadao para manter histórico de classificações e deixar a tabela cidadaos mais limpa.
+
+Ou, manter em cidadaos apenas a última classificação ativa, usando classificacoes_cidadao como histórico.
+
+
+
+3.	Dados incompletos e inconsistentes:
+
+Alguns registros de cidadãos estão com campos obrigatórios vazios ou incoerentes, como:
+
+Nome, email, cidade, provincia faltando ou mal formatados.
+
+Exemplo: joao.teste@email.com com nome mal codificado (JoÃÂÃÂ£o) — problema de encoding (deve usar UTF-8).
+
+Emails como jr5agostinho@gmailcom e wilsonagostinho@gamail.com estão mal escritos.
+
+
+
+4.	Normalização possível:
+
+Cidade e provincia aparecem como texto livre em várias tabelas (risco de erro humano).
+
+Melhor criar tabelas auxiliares cidades e provincias com relacionamentos.
+
+
+
+
+
+Recomendações Práticas
+
+1.	Corrigir encoding de entrada e exibição dos dados.
+
+
+2.	Implementar chaves estrangeiras com ON DELETE CASCADE ou SET NULL conforme o caso.
+
+
+3.	Validar dados no frontend/backend:
+
+E-mails válidos.
+
+Telefones com padrão nacional.
+
+Datas coerentes (ex: nascimento em 2025 está errado).
+
+
+
+4.	Auditoria: Campos como data_registro, data_classificacao e data_denuncia estão bem pensados — manter essa prática em todas tabelas com atividades.
+
+
+
+
+
+Se quiser, posso gerar:
+
+Um modelo ER baseado nessas tabelas.
+
+Scripts de criação SQL com chaves estrangeiras e índices.
+
+Protótipos visuais de formulários para entrada e consulta.
+
+
+
+
+
+
