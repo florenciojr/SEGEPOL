@@ -18,7 +18,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
 import model.ClassificacaoCidadao;
-import model.Conexao;
+import util.Conexao;
 
 public class ClassificacaoCidadaoDAO {
 

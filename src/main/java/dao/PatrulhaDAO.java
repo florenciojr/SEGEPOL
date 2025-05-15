@@ -12,7 +12,7 @@ package dao;
 
 
 import model.Patrulha;
-import model.Conexao;
+import util.Conexao;
 import java.sql.*;
 import java.time.LocalDate;
 import java.time.LocalTime;

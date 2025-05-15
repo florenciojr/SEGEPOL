@@ -16,7 +16,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 import model.AndamentoQueixa;
-import model.Conexao;
+import util.Conexao;
 
 public class AndamentoQueixaDAO {
     private Connection conexao;

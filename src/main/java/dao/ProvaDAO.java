@@ -10,7 +10,7 @@ package dao;
  */
 
 import model.Prova;
-import model.Conexao;
+import util.Conexao;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;

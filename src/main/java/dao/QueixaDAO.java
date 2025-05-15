@@ -22,7 +22,7 @@ import java.util.Map;
 import java.util.Scanner;
 import model.Queixa;
 import model.TiposQueixa;
-import model.Conexao;
+import util.Conexao;
 
 public class QueixaDAO {
     private static final String[] STATUS_PERMITIDOS = {

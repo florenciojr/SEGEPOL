@@ -1,28 +1,27 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package model;
+
+import java.sql.Timestamp;
 
 /**
  *
  * @author JR5
  */
-
-
 public class Vitima {
     private int idVitima;
     private int idQueixa;
     private int idCidadao;
     private String descricao;
     private TipoVitima tipoVitima;
+    private Timestamp dataRegistro;
 
-    // Enum para os tipos de vítima
-    public enum TipoVitima {
-        DIRETA("Direta"),
-        INDIRETA("Indireta"),
-        FAMILIAR("Familiar"),
-        TESTEMUNHA("Testemunha");
+    
+public enum TipoVitima {
+    Direta("Direta"),
+    Indireta("Indireta"),
+    Familiar("Familiar"),
+    Testemunha("Testemunha");
+
+    // ... resto do código do enum permanece igual ...
 
         private final String descricao;
 
@@ -35,8 +34,8 @@ public class Vitima {
         }
     }
 
-    // Construtores
     public Vitima() {
+        this.dataRegistro = new Timestamp(System.currentTimeMillis());
     }
 
     public Vitima(int idQueixa, int idCidadao, String descricao, TipoVitima tipoVitima) {
@@ -44,6 +43,7 @@ public class Vitima {
         this.idCidadao = idCidadao;
         this.descricao = descricao;
         this.tipoVitima = tipoVitima;
+        this.dataRegistro = new Timestamp(System.currentTimeMillis());
     }
 
     // Getters e Setters
@@ -87,19 +87,28 @@ public class Vitima {
         this.tipoVitima = tipoVitima;
     }
 
-    // Método para obter o tipo como String (para uso no BD)
+    public Timestamp getDataRegistro() {
+        return dataRegistro;
+    }
+
+    public void setDataRegistro(Timestamp dataRegistro) {
+        this.dataRegistro = dataRegistro;
+    }
+
     public String getTipoVitimaAsString() {
         return tipoVitima != null ? tipoVitima.name() : null;
     }
 
-    // Método para definir o tipo a partir de String (para leitura do BD)
     public void setTipoVitimaFromString(String tipo) {
         if (tipo != null) {
-            this.tipoVitima = TipoVitima.valueOf(tipo.toUpperCase());
+            try {
+                this.tipoVitima = TipoVitima.valueOf(tipo.toUpperCase());
+            } catch (IllegalArgumentException e) {
+                this.tipoVitima = TipoVitima.Direta;
+            }
         }
     }
 
-    // toString aprimorado
     @Override
     public String toString() {
         return "Vitima{" +
@@ -108,6 +117,7 @@ public class Vitima {
                 ", idCidadao=" + idCidadao +
                 ", descricao='" + descricao + '\'' +
                 ", tipoVitima=" + (tipoVitima != null ? tipoVitima.getDescricao() : "null") +
+                ", dataRegistro=" + dataRegistro +
                 '}';
     }
 }

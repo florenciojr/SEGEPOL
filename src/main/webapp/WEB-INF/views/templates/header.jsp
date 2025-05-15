@@ -149,6 +149,19 @@
                 
                 <!-- Menu do Usuário -->
                 <div class="d-flex">
+
+
+
+
+ <ul>
+                    <li class="nav-item">
+                        <a class="nav-link nav-link-prm" 
+                           href="${pageContext.request.contextPath}/viaturas">
+                            <i class="fas fa-car-side me-1"></i> Viaturas
+                        </a>
+                    </li>
+                </ul>
+
                     <div class="dropdown">
                         <a class="nav-link nav-link-prm dropdown-toggle" 
                            href="#" 

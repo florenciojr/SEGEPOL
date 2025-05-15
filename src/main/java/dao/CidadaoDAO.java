@@ -15,7 +15,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import model.Cidadao;
-import model.Conexao;
+import util.Conexao;
 
 
 

@@ -19,21 +19,29 @@ import javax.servlet.http.HttpServletResponse;
 
 
 
+
 import dao.VitimaDAO;
 import model.Vitima;
-import java.io.IOException;
-import java.sql.SQLException;
-import java.util.List;
-import java.util.Map;
+import model.Vitima.TipoVitima;
+
+import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.sql.SQLException;
+import java.util.List;
+import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 @WebServlet(name = "VitimaServlet", urlPatterns = {"/vitimas"})
 public class VitimaServlet extends HttpServlet {
-
+    private static final long serialVersionUID = 1L;
+    private static final Logger logger = Logger.getLogger(VitimaServlet.class.getName());
+    
     private VitimaDAO vitimaDAO;
 
     @Override
@@ -44,10 +52,10 @@ public class VitimaServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        String action = request.getParameter("action");
+        String action = request.getParameter("action") != null ? request.getParameter("action") : "list";
         
         try {
-            switch (action != null ? action : "") {
+            switch (action) {
                 case "new":
                     showNewForm(request, response);
                     break;
@@ -57,17 +65,16 @@ public class VitimaServlet extends HttpServlet {
                 case "delete":
                     deleteVitima(request, response);
                     break;
-                case "listByQueixa":
-                    listVitimasByQueixa(request, response);
-                    break;
                 default:
                     listVitimas(request, response);
                     break;
             }
         } catch (SQLException ex) {
-            handleError(request, response, "Erro no banco de dados: " + ex.getMessage());
+            handleError(request, response, "Erro no banco de dados: " + ex.getMessage(), ex);
+        } catch (NumberFormatException ex) {
+            handleError(request, response, "ID inválido: " + ex.getMessage(), ex);
         } catch (Exception ex) {
-            handleError(request, response, "Erro inesperado: " + ex.getMessage());
+            handleError(request, response, "Erro inesperado: " + ex.getMessage(), ex);
         }
     }
 
@@ -89,38 +96,56 @@ public class VitimaServlet extends HttpServlet {
                     break;
             }
         } catch (SQLException ex) {
-            handleError(request, response, "Erro no banco de dados: " + ex.getMessage());
+            handleError(request, response, "Erro no banco de dados: " + ex.getMessage(), ex);
+        } catch (NumberFormatException ex) {
+            handleError(request, response, "ID inválido: " + ex.getMessage(), ex);
         } catch (Exception ex) {
-            handleError(request, response, "Erro inesperado: " + ex.getMessage());
+            handleError(request, response, "Erro inesperado: " + ex.getMessage(), ex);
         }
     }
 
-    private void listVitimas(HttpServletRequest request, HttpServletResponse response)
-            throws SQLException, ServletException, IOException {
-        List<Vitima> listVitimas = vitimaDAO.listAll();
-        request.setAttribute("listVitimas", listVitimas);
-        request.getRequestDispatcher("/WEB-INF/views/vitimas/listVitimas.jsp").forward(request, response);
-    }
-
-    private void listVitimasByQueixa(HttpServletRequest request, HttpServletResponse response)
-            throws SQLException, ServletException, IOException {
-        int idQueixa = Integer.parseInt(request.getParameter("idQueixa"));
+private void listVitimas(HttpServletRequest request, HttpServletResponse response)
+        throws SQLException, ServletException, IOException {
+    String filterQueixa = request.getParameter("filterQueixa");
+    
+    if (filterQueixa != null && !filterQueixa.isEmpty()) {
+        int idQueixa = Integer.parseInt(filterQueixa);
         List<Map<String, Object>> vitimasDetalhadas = vitimaDAO.findDetailedByQueixa(idQueixa);
         
+        // Padroniza os nomes das chaves para camelCase
+        for (Map<String, Object> vitimaMap : vitimasDetalhadas) {
+            if (vitimaMap.containsKey("id_vitima")) {
+                vitimaMap.put("idVitima", vitimaMap.remove("id_vitima"));
+            }
+            if (vitimaMap.containsKey("id_queixa")) {
+                vitimaMap.put("idQueixa", vitimaMap.remove("id_queixa"));
+            }
+            if (vitimaMap.containsKey("id_cidadao")) {
+                vitimaMap.put("idCidadao", vitimaMap.remove("id_cidadao"));
+            }
+            if (vitimaMap.containsKey("tipo_vitima")) {
+                vitimaMap.put("tipoVitima", vitimaMap.remove("tipo_vitima"));
+            }
+        }
+        
         request.setAttribute("vitimas", vitimasDetalhadas);
-        request.setAttribute("idQueixa", idQueixa);
-        request.getRequestDispatcher("/WEB-INF/views/vitimas/listVitimas.jsp").forward(request, response);
+        request.setAttribute("filterQueixa", idQueixa);
+    } else {
+        List<Vitima> vitimas = vitimaDAO.listAll(0, 100);
+        request.setAttribute("vitimas", vitimas);
     }
+    
+    request.setAttribute("queixas", vitimaDAO.listarQueixasParaDropdown());
+    forwardToView(request, response, "/WEB-INF/views/vitimas/listVitimas.jsp");
+}
 
     private void showNewForm(HttpServletRequest request, HttpServletResponse response)
             throws SQLException, ServletException, IOException {
-        int idQueixa = Integer.parseInt(request.getParameter("idQueixa"));
-        List<Map<String, String>> cidadaos = vitimaDAO.listarCidadaosParaDropdown();
-        
-        request.setAttribute("cidadaos", cidadaos);
-        request.setAttribute("idQueixa", idQueixa);
-        request.setAttribute("tiposVitima", Vitima.TipoVitima.values());
-        request.getRequestDispatcher("/WEB-INF/views/vitimas/formVitima.jsp").forward(request, response);
+        request.setAttribute("cidadaos", vitimaDAO.listarCidadaosParaDropdown());
+        request.setAttribute("queixas", vitimaDAO.listarQueixasParaDropdown());
+        request.setAttribute("tiposVitima", TipoVitima.values());
+        request.setAttribute("action", "insert");
+        forwardToView(request, response, "/WEB-INF/views/vitimas/formVitima.jsp");
     }
 
     private void showEditForm(HttpServletRequest request, HttpServletResponse response)
@@ -129,75 +154,71 @@ public class VitimaServlet extends HttpServlet {
         Vitima vitima = vitimaDAO.read(id);
         
         if (vitima == null) {
-            throw new ServletException("Vítima não encontrada");
+            throw new ServletException("Vítima não encontrada com ID: " + id);
         }
         
-        List<Map<String, String>> cidadaos = vitimaDAO.listarCidadaosParaDropdown();
-        
-        request.setAttribute("cidadaos", cidadaos);
+        request.setAttribute("cidadaos", vitimaDAO.listarCidadaosParaDropdown());
+        request.setAttribute("queixas", vitimaDAO.listarQueixasParaDropdown());
         request.setAttribute("vitima", vitima);
-        request.setAttribute("tiposVitima", Vitima.TipoVitima.values());
-        request.getRequestDispatcher("/WEB-INF/views/vitimas/formVitima.jsp").forward(request, response);
+        request.setAttribute("tiposVitima", TipoVitima.values());
+        request.setAttribute("action", "update");
+        forwardToView(request, response, "/WEB-INF/views/vitimas/formVitima.jsp");
     }
 
     private void insertVitima(HttpServletRequest request, HttpServletResponse response)
-            throws SQLException, IOException {
-        int idQueixa = Integer.parseInt(request.getParameter("idQueixa"));
-        int idCidadao = Integer.parseInt(request.getParameter("idCidadao"));
-        String descricao = request.getParameter("descricao");
-        Vitima.TipoVitima tipo = Vitima.TipoVitima.valueOf(request.getParameter("tipoVitima"));
+            throws SQLException, IOException, ServletException {
+        Vitima vitima = extractVitimaFromRequest(request);
         
-        // Verifica se o cidadão já é vítima desta queixa
-        if (vitimaDAO.isCidadaoVitima(idQueixa, idCidadao)) {
-            response.sendRedirect("vitimas?action=listByQueixa&idQueixa=" + idQueixa + "&error=Cidadão já cadastrado como vítima");
+        if (vitimaDAO.isCidadaoVitima(vitima.getIdQueixa(), vitima.getIdCidadao())) {
+            request.setAttribute("error", "Este cidadão já está cadastrado como vítima nesta queixa");
+            request.setAttribute("cidadaos", vitimaDAO.listarCidadaosParaDropdown());
+            request.setAttribute("queixas", vitimaDAO.listarQueixasParaDropdown());
+            request.setAttribute("vitima", vitima);
+            request.setAttribute("tiposVitima", TipoVitima.values());
+            request.setAttribute("action", "insert");
+            forwardToView(request, response, "/WEB-INF/views/vitimas/formVitima.jsp");
             return;
         }
         
-        Vitima novaVitima = new Vitima();
-        novaVitima.setIdQueixa(idQueixa);
-        novaVitima.setIdCidadao(idCidadao);
-        novaVitima.setDescricao(descricao);
-        novaVitima.setTipoVitima(tipo);
-        
-        vitimaDAO.create(novaVitima);
-        response.sendRedirect("vitimas?action=listByQueixa&idQueixa=" + idQueixa);
+        vitimaDAO.create(vitima);
+        response.sendRedirect(request.getContextPath() + "/vitimas?success=V%C3%ADtima+cadastrada+com+sucesso");
     }
 
     private void updateVitima(HttpServletRequest request, HttpServletResponse response)
-            throws SQLException, IOException {
-        int id = Integer.parseInt(request.getParameter("id"));
-        int idQueixa = Integer.parseInt(request.getParameter("idQueixa"));
-        int idCidadao = Integer.parseInt(request.getParameter("idCidadao"));
-        String descricao = request.getParameter("descricao");
-        Vitima.TipoVitima tipo = Vitima.TipoVitima.valueOf(request.getParameter("tipoVitima"));
-        
-        Vitima vitima = new Vitima();
-        vitima.setIdVitima(id);
-        vitima.setIdQueixa(idQueixa);
-        vitima.setIdCidadao(idCidadao);
-        vitima.setDescricao(descricao);
-        vitima.setTipoVitima(tipo);
+            throws SQLException, IOException, ServletException {
+        Vitima vitima = extractVitimaFromRequest(request);
+        vitima.setIdVitima(Integer.parseInt(request.getParameter("id")));
         
         vitimaDAO.update(vitima);
-        response.sendRedirect("vitimas?action=listByQueixa&idQueixa=" + idQueixa);
+        response.sendRedirect(request.getContextPath() + "/vitimas?success=V%C3%ADtima+atualizada+com+sucesso");
     }
 
     private void deleteVitima(HttpServletRequest request, HttpServletResponse response)
             throws SQLException, IOException {
         int id = Integer.parseInt(request.getParameter("id"));
-        int idQueixa = Integer.parseInt(request.getParameter("idQueixa"));
-        
         vitimaDAO.delete(id);
-        response.sendRedirect("vitimas?action=listByQueixa&idQueixa=" + idQueixa);
+        response.sendRedirect(request.getContextPath() + "/vitimas?success=V%C3%ADtima+removida+com+sucesso");
     }
 
-    private void handleError(HttpServletRequest request, HttpServletResponse response, String message) 
+    private Vitima extractVitimaFromRequest(HttpServletRequest request) {
+        Vitima vitima = new Vitima();
+        vitima.setIdQueixa(Integer.parseInt(request.getParameter("idQueixa")));
+        vitima.setIdCidadao(Integer.parseInt(request.getParameter("idCidadao")));
+        vitima.setDescricao(request.getParameter("descricao"));
+        vitima.setTipoVitima(TipoVitima.valueOf(request.getParameter("tipoVitima")));
+        return vitima;
+    }
+
+    private void forwardToView(HttpServletRequest request, HttpServletResponse response, String viewPath)
             throws ServletException, IOException {
+        RequestDispatcher dispatcher = request.getRequestDispatcher(viewPath);
+        dispatcher.forward(request, response);
+    }
+
+    private void handleError(HttpServletRequest request, HttpServletResponse response, 
+                           String message, Exception ex) throws ServletException, IOException {
+        logger.log(Level.SEVERE, message, ex);
         request.setAttribute("error", message);
-        try {
-            listVitimas(request, response);
-        } catch (Exception e) {
-            request.getRequestDispatcher("/WEB-INF/views/error.jsp").forward(request, response);
-        }
+        forwardToView(request, response, "/WEB-INF/views/error.jsp");
     }
 }

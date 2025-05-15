@@ -48,6 +48,19 @@
                 </li>
             </ul>
 
+
+     <!-- Item Viaturas -->
+ <ul>
+                    <li class="nav-item">
+                        <a class="nav-link nav-link-prm" 
+                           href="${pageContext.request.contextPath}/viaturas">
+                            <i class="fas fa-car-side me-1"></i> Viaturas
+                        </a>
+                    </li>
+                </ul>
+
+
+
   <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
                         <i class="fas fa-users-cog me-1"></i> Usuários
@@ -61,6 +74,10 @@
                             <i class="fas fa-list text-primary me-1"></i> Auto de denuncia = o cidadao lesado vai fazer a denuncia
                         </a></li>
                     </ul>
+
+
+
+
 
 
             <!-- Área do Usuário -->

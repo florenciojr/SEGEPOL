@@ -17,7 +17,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Arrays;
 import model.Usuario;
-import model.Conexao;
+import util.Conexao;
 
 public class UsuarioDAO {
 

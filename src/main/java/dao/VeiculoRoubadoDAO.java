@@ -12,7 +12,7 @@ package dao;
 
 
 import model.VeiculoRoubado;
-import model.Conexao;
+import util.Conexao;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;

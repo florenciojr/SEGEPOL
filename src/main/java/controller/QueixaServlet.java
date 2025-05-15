@@ -36,7 +36,7 @@ import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import model.Conexao;
+import util.Conexao;
 
 @WebServlet(name = "QueixaServlet", urlPatterns = {"/queixas"})
 public class QueixaServlet extends HttpServlet {

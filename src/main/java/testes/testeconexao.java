@@ -9,7 +9,7 @@
  */
 package testes;
 
-import model.Conexao;
+import util.Conexao;
 import java.sql.Connection;
 
 public class testeconexao {

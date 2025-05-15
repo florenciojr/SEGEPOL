@@ -14,7 +14,7 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 import model.TiposQueixa;
-import model.Conexao;
+import util.Conexao;
 import dao.TiposQueixaDAO;
 import java.util.Scanner;
 

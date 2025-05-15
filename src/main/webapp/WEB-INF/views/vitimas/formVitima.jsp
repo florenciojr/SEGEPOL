@@ -4,68 +4,68 @@
 <html>
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-    <title>${vitima == null ? 'Nova' : 'Editar'} Vítima</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <title>${empty vitima ? 'Nova' : 'Editar'} Vítima</title>
+    <style>
+        .error { color: red; }
+        form { max-width: 500px; margin: 20px auto; }
+        label { display: block; margin-top: 15px; }
+        input, select, textarea { width: 100%; padding: 8px; }
+        button { margin-top: 20px; padding: 8px 15px; }
+        .form-actions { margin-top: 20px; }
+    </style>
 </head>
 <body>
-    <div class="container mt-4">
-        <h1>${vitima == null ? 'Adicionar' : 'Editar'} Vítima</h1>
-        
-        <c:if test="${not empty error}">
-            <div class="alert alert-danger">${error}</div>
+    <h1>${empty vitima ? 'Nova' : 'Editar'} Vítima</h1>
+    
+    <c:if test="${not empty error}">
+        <p class="error">${error}</p>
+    </c:if>
+    
+    <form method="post" action="${pageContext.request.contextPath}/vitimas?action=${action}">
+        <c:if test="${not empty vitima}">
+            <input type="hidden" name="id" value="${vitima.idVitima}">
         </c:if>
         
-        <form action="vitimas" method="post">
-            <input type="hidden" name="action" value="${vitima == null ? 'insert' : 'update'}">
-            <c:if test="${vitima != null}">
-                <input type="hidden" name="id" value="${vitima.idVitima}">
-            </c:if>
-            <input type="hidden" name="idQueixa" value="${idQueixa}">
-            
-            <div class="mb-3">
-                <label for="idCidadao" class="form-label">Cidadão</label>
-                <select class="form-select" id="idCidadao" name="idCidadao" required>
-                    <option value="">Selecione um cidadão</option>
-                    <c:forEach var="cidadao" items="${cidadaos}">
-                        <option value="${cidadao.key}" 
-                            ${vitima != null && vitima.idCidadao == Integer.parseInt(cidadao.key) ? 'selected' : ''}>
-                            ${cidadao.value}
-                        </option>
-                    </c:forEach>
-                </select>
-            </div>
-            
-            <div class="mb-3">
-                <label for="tipoVitima" class="form-label">Tipo de Vítima</label>
-                <select class="form-select" id="tipoVitima" name="tipoVitima" required>
-                    <option value="">Selecione o tipo</option>
-                    <c:forEach var="tipo" items="${tiposVitima}">
-                        <option value="${tipo}" 
-                            ${vitima != null && vitima.tipoVitima == tipo ? 'selected' : ''}>
-                            ${tipo.descricao}
-                        </option>
-                    </c:forEach>
-                </select>
-            </div>
-            
-            <div class="mb-3">
-                <label for="descricao" class="form-label">Descrição</label>
-                <textarea class="form-control" id="descricao" name="descricao" rows="3">${vitima.descricao}</textarea>
-            </div>
-            
-            <div class="d-grid gap-2 d-md-flex justify-content-md-end">
-                <button type="submit" class="btn btn-primary me-md-2">
-                    <i class="bi bi-save"></i> Salvar
-                </button>
-                <a href="vitimas?action=listByQueixa&idQueixa=${idQueixa}" class="btn btn-secondary">
-                    <i class="bi bi-x-circle"></i> Cancelar
-                </a>
-            </div>
-        </form>
-    </div>
-    
-    <!-- Bootstrap JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+        <label>Queixa:
+            <select name="idQueixa" required>
+                <option value="">Selecione uma queixa</option>
+                <c:forEach items="${queixas}" var="queixa">
+                    <option value="${queixa.key}" ${vitima.idQueixa eq queixa.key ? 'selected' : ''}>
+                        Queixa #${queixa.key} - ${queixa.value}
+                    </option>
+                </c:forEach>
+            </select>
+        </label>
+        
+        <label>Cidadão:
+            <select name="idCidadao" required>
+                <option value="">Selecione um cidadão</option>
+                <c:forEach items="${cidadaos}" var="cidadao">
+                    <option value="${cidadao.key}" ${vitima.idCidadao eq cidadao.key ? 'selected' : ''}>
+                        ${cidadao.value} (${cidadao.key})
+                    </option>
+                </c:forEach>
+            </select>
+        </label>
+        
+        <label>Tipo de Vítima:
+            <select name="tipoVitima" required>
+                <c:forEach items="${tiposVitima}" var="tipo">
+                    <option value="${tipo}" ${vitima.tipoVitima eq tipo ? 'selected' : ''}>
+                        ${tipo}
+                    </option>
+                </c:forEach>
+            </select>
+        </label>
+        
+        <label>Descrição:
+            <textarea name="descricao" rows="4">${vitima.descricao}</textarea>
+        </label>
+        
+        <div class="form-actions">
+            <button type="submit">Salvar</button>
+            <a href="${pageContext.request.contextPath}/vitimas">Cancelar</a>
+        </div>
+    </form>
 </body>
 </html>
