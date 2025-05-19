@@ -1,36 +1,32 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package model;
+
+import java.sql.Timestamp;
 
 /**
  *
  * @author JR5
  */
-
-
-
 public class TiposQueixa {
     private int idTipo;
     private String nomeTipo;
     private String descricao;
     private String gravidade;
+    private Timestamp dataCadastro;
     
     // Construtor vazio
     public TiposQueixa() {
     }
 
     // Construtor completo
-    public TiposQueixa(int idTipo, String nomeTipo, String descricao, String gravidade) {
+    public TiposQueixa(int idTipo, String nomeTipo, String descricao, String gravidade, Timestamp dataCadastro) {
         this.idTipo = idTipo;
         this.nomeTipo = nomeTipo;
         this.descricao = descricao;
         this.gravidade = gravidade;
+        this.dataCadastro = dataCadastro;
     }
 
-    // Métodos Getters e Setters COMPLETOS e IMPLEMENTADOS
-
+    // Getters e Setters
     public int getIdTipo() {
         return idTipo;
     }
@@ -59,13 +55,22 @@ public class TiposQueixa {
         return gravidade;
     }
 
-    // MÉTODO CORRIGIDO - implementação real
     public void setGravidade(String gravidade) {
         this.gravidade = gravidade;
     }
 
+    public Timestamp getDataCadastro() {
+        return dataCadastro;
+    }
+
+    public void setDataCadastro(Timestamp dataCadastro) {
+        this.dataCadastro = dataCadastro;
+    }
+
     @Override
     public String toString() {
-        return nomeTipo + " - " + gravidade;
+        return "TiposQueixa{" + "idTipo=" + idTipo + ", nomeTipo=" + nomeTipo + 
+               ", descricao=" + descricao + ", gravidade=" + gravidade + 
+               ", dataCadastro=" + dataCadastro + '}';
     }
 }

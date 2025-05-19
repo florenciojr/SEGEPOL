@@ -325,6 +325,21 @@
                         <div class="invalid-feedback">Este campo é obrigatório</div>
                     </div>
                 </div>
+<!-- Seção: Características Físicas -->
+<h3 class="section-title">
+    <i class="fas fa-id-card"></i> Características Físicas
+</h3>
+
+<div class="row mb-4">
+    <div class="col-12">
+        <label for="caracteristicasFisicas" class="form-label">Características Físicas</label>
+<textarea class="form-control" id="caracteristicasFisicas" name="caracteristicasFisicas" 
+          rows="4">${cidadao.caracteristicasFisicas}</textarea>
+        <small class="text-muted">
+            Ex: Estatura, cor dos olhos, cicatrizes, tatuagens, marcas distintivas, etc.
+        </small>
+    </div>
+</div>
                 
                 <!-- Seção: Contato -->
                 <h3 class="section-title">

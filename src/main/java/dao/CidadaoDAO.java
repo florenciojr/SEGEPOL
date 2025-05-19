@@ -49,8 +49,8 @@ public List<String> getClassificacoesDisponiveis() throws SQLException {
 public void inserirCidadao(Cidadao cidadao) {
     String sql = "INSERT INTO cidadaos (nome, genero, data_nascimento, documento_identificacao, "
                + "tipo_documento, telefone, email, naturalidade, rua, bairro, cidade, provincia, "
-               + "caminho_imagem, classificacao) "
-               + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+               + "caminho_imagem, classificacao, caracteristicas_fisicas) "
+               + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
     try (Connection conn = Conexao.conectar();
          PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -67,24 +67,15 @@ public void inserirCidadao(Cidadao cidadao) {
         stmt.setString(10, cidadao.getBairro());
         stmt.setString(11, cidadao.getCidade());
         stmt.setString(12, cidadao.getProvincia());
-        stmt.setString(14, mapearClassificacaoParaBanco(cidadao.getClassificacao()));
         stmt.setString(13, cidadao.getCaminhoImagem());
-           String classificacao = cidadao.getClassificacao();
-        if(classificacao.equals("Cidadão Comum")) {
-            stmt.setString(14, "Comum"); // Valor sem acento para o banco
-        } else if(classificacao.equals("Vítima")) {
-            stmt.setString(14, "Vitima"); // Valor sem acento para o banco
-        } else {
-            stmt.setString(14, classificacao);
-        }
+        stmt.setString(14, mapearClassificacaoParaBanco(cidadao.getClassificacao()));
+        stmt.setString(15, cidadao.getCaracteristicasFisicas());
 
         stmt.executeUpdate();
     } catch (SQLException e) {
-        System.err.println("Erro ao inserir cidadão: " + e.getMessage());
         e.printStackTrace();
     }
 }
-
 
 public List<Cidadao> listarCidadaos() {
     List<Cidadao> cidadaos = new ArrayList<>();
@@ -109,7 +100,8 @@ public List<Cidadao> listarCidadaos() {
             cidadao.setCidade(rs.getString("cidade"));
             cidadao.setProvincia(rs.getString("provincia"));
             cidadao.setCaminhoImagem(rs.getString("caminho_imagem"));
-            cidadao.setClassificacao(rs.getString("classificacao")); // Adicionado esta linha
+            cidadao.setClassificacao(rs.getString("classificacao"));
+            cidadao.setCaracteristicasFisicas(rs.getString("caracteristicas_fisicas"));
             cidadaos.add(cidadao);
         }
     } catch (SQLException e) {
@@ -118,37 +110,42 @@ public List<Cidadao> listarCidadaos() {
     return cidadaos;
 }
 
-     public Cidadao buscarCidadaoPorId(int id) {
-        String sql = "SELECT * FROM cidadaos WHERE id_cidadao = ?";
-        
-        try (Connection conn = Conexao.conectar();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setInt(1, id);
-            ResultSet rs = stmt.executeQuery();
-            if (rs.next()) {
-                Cidadao cidadao = new Cidadao();
-                cidadao.setIdCidadao(rs.getInt("id_cidadao"));
-                cidadao.setNome(rs.getString("nome"));
-                cidadao.setGenero(rs.getString("genero"));
-                cidadao.setDataNascimento(rs.getDate("data_nascimento").toLocalDate());
-                cidadao.setDocumentoIdentificacao(rs.getString("documento_identificacao"));
-                cidadao.setTelefone(rs.getString("telefone"));
-                cidadao.setEmail(rs.getString("email"));
-                cidadao.setNaturalidade(rs.getString("naturalidade"));
-                cidadao.setRua(rs.getString("rua"));
-                cidadao.setBairro(rs.getString("bairro"));
-                cidadao.setCidade(rs.getString("cidade"));
-                cidadao.setProvincia(rs.getString("provincia"));
-                cidadao.setCaminhoImagem(rs.getString("caminho_imagem"));
-                cidadao.setClassificacao(rs.getString("classificacao"));
-                return cidadao;
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return null;
-    }
+public Cidadao buscarCidadaoPorId(int id) {
+    String sql = "SELECT * FROM cidadaos WHERE id_cidadao = ?";
     
+    try (Connection conn = Conexao.conectar();
+         PreparedStatement stmt = conn.prepareStatement(sql)) {
+         
+        stmt.setInt(1, id);
+        ResultSet rs = stmt.executeQuery();
+        
+        if (rs.next()) {
+            Cidadao cidadao = new Cidadao();
+            cidadao.setIdCidadao(rs.getInt("id_cidadao"));
+            cidadao.setNome(rs.getString("nome"));
+            cidadao.setGenero(rs.getString("genero"));
+            cidadao.setDataNascimento(rs.getDate("data_nascimento").toLocalDate());
+            cidadao.setDocumentoIdentificacao(rs.getString("documento_identificacao"));
+            cidadao.setTipoDocumento(rs.getString("tipo_documento"));
+            cidadao.setTelefone(rs.getString("telefone"));
+            cidadao.setEmail(rs.getString("email"));
+            cidadao.setNaturalidade(rs.getString("naturalidade"));
+            cidadao.setRua(rs.getString("rua"));
+            cidadao.setBairro(rs.getString("bairro"));
+            cidadao.setCidade(rs.getString("cidade"));
+            cidadao.setProvincia(rs.getString("provincia"));
+            cidadao.setCaminhoImagem(rs.getString("caminho_imagem"));
+            cidadao.setCaracteristicasFisicas(rs.getString("caracteristicas_fisicas"));
+            cidadao.setClassificacao(rs.getString("classificacao"));
+             cidadao.setCaracteristicasFisicas(rs.getString("caracteristicas_fisicas"));
+            
+            return cidadao;
+        }
+    } catch (SQLException e) {
+        e.printStackTrace();
+    }
+    return null;
+}
    public Cidadao buscarCidadaoPorDocumento(String documentoIdentificacao) {
         String sql = "SELECT * FROM cidadaos WHERE documento_identificacao = ?";
         
@@ -171,6 +168,7 @@ public List<Cidadao> listarCidadaos() {
                 cidadao.setCidade(rs.getString("cidade"));
                 cidadao.setProvincia(rs.getString("provincia"));
                 cidadao.setCaminhoImagem(rs.getString("caminho_imagem"));
+                 cidadao.setCaracteristicasFisicas(rs.getString("caracteristicas_fisicas"));
                 return cidadao;
             }
         } catch (SQLException e) {
@@ -185,11 +183,13 @@ public void atualizarCidadao(Cidadao cidadao) {
     String sql = "UPDATE cidadaos SET nome = ?, genero = ?, data_nascimento = ?, "
                + "documento_identificacao = ?, tipo_documento = ?, telefone = ?, email = ?, "
                + "naturalidade = ?, rua = ?, bairro = ?, cidade = ?, provincia = ?, "
-               + "caminho_imagem = ?, classificacao = ? WHERE id_cidadao = ?";
+               + "caminho_imagem = ?, classificacao = ?, caracteristicas_fisicas = ? " 
+               + "WHERE id_cidadao = ?";
 
     try (Connection conn = Conexao.conectar();
          PreparedStatement stmt = conn.prepareStatement(sql)) {
         
+        // Ordem dos parâmetros corrigida
         stmt.setString(1, cidadao.getNome());
         stmt.setString(2, cidadao.getGenero());
         stmt.setDate(3, Date.valueOf(cidadao.getDataNascimento()));
@@ -203,15 +203,15 @@ public void atualizarCidadao(Cidadao cidadao) {
         stmt.setString(11, cidadao.getCidade());
         stmt.setString(12, cidadao.getProvincia());
         stmt.setString(13, cidadao.getCaminhoImagem());
-        stmt.setString(14, cidadao.getClassificacao());
-        stmt.setInt(15, cidadao.getIdCidadao());
+        stmt.setString(14, mapearClassificacaoParaBanco(cidadao.getClassificacao()));
+        stmt.setString(15, cidadao.getCaracteristicasFisicas());
+        stmt.setInt(16, cidadao.getIdCidadao());
 
         stmt.executeUpdate();
     } catch (SQLException e) {
         e.printStackTrace();
     }
 }
-
 
 
     public void deletarCidadao(int id) {
@@ -252,6 +252,7 @@ public List<Cidadao> buscarCidadaosPorNome(String nome) {
             cidadao.setBairro(rs.getString("bairro"));
             cidadao.setCidade(rs.getString("cidade"));
             cidadao.setProvincia(rs.getString("provincia"));
+             cidadao.setCaracteristicasFisicas(rs.getString("caracteristicas_fisicas"));
             cidadaos.add(cidadao);
         }
     } catch (SQLException e) {

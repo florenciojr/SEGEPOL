@@ -15,5 +15,6 @@ Any value defined here will override the pom.xml file value but is only applicab
 -->
         <org-netbeans-modules-maven-j2ee.netbeans_2e_hint_2e_j2eeVersion>1.7-web</org-netbeans-modules-maven-j2ee.netbeans_2e_hint_2e_j2eeVersion>
         <org-netbeans-modules-maven-j2ee.netbeans_2e_hint_2e_deploy_2e_server>Tomcat</org-netbeans-modules-maven-j2ee.netbeans_2e_hint_2e_deploy_2e_server>
+        <org-zeroturnaround-jrebel-netbeans.rebelXmlGenerationInvariantToken>PGFwcGxpY2F0aW9uIGdlbmVyYXRlZC1ieT0ibmV0YmVhbnMiPjxjbGFzc3BhdGg+PGRpciBuYW1lPSJDOi9Vc2Vycy9KUjUvTXVzaWMvU0VHRVBPTC90YXJnZXQvY2xhc3NlcyI+PC9kaXI+PC9jbGFzc3BhdGg+PHdlYj48bGluayB0YXJnZXQ9Ii8iPjxkaXIgbmFtZT0iQzovVXNlcnMvSlI1L011c2ljL1NFR0VQT0wvc3JjL21haW4vd2ViYXBwIj48L2Rpcj48L2xpbms+PC93ZWI+PC9hcHBsaWNhdGlvbj4=</org-zeroturnaround-jrebel-netbeans.rebelXmlGenerationInvariantToken>
     </properties>
 </project-shared-configuration>

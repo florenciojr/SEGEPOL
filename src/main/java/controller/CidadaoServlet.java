@@ -28,7 +28,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.Part;
 
-@WebServlet("/cidadao")
+@WebServlet({"/cidadao", "/cidadaos"})
 @MultipartConfig(
     fileSizeThreshold = 1024 * 1024 * 1, // 1 MB
     maxFileSize = 1024 * 1024 * 10,      // 10 MB
@@ -92,6 +92,11 @@ request.setAttribute("classificacoes", classificacoes);
                 default:
                     listarCidadaos(request, response);
                     break;
+                                        case "view":
+    visualizarCidadao(request, response);
+    break;
+
+                    
             }
         } catch (Exception e) {
             throw new ServletException(e);
@@ -152,26 +157,25 @@ request.setAttribute("classificacoes", classificacoes);
         response.sendRedirect(request.getContextPath() + "/cidadao");
     }
 
-    private void atualizarCidadao(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        Cidadao cidadao = criarCidadaoAPartirRequest(request);
-        cidadao.setIdCidadao(Integer.parseInt(request.getParameter("id")));
-        
-        // Processar upload da nova imagem (se fornecida)
-        Part filePart = request.getPart("imagem");
-        if (filePart != null && filePart.getSize() > 0) {
-            String caminhoImagem = processarUploadImagem(filePart, request);
-            cidadao.setCaminhoImagem(caminhoImagem);
-        } else {
-            // Manter a imagem existente se nenhuma nova for enviada
-            Cidadao cidadaoExistente = cidadaoDAO.buscarCidadaoPorId(cidadao.getIdCidadao());
-            cidadao.setCaminhoImagem(cidadaoExistente.getCaminhoImagem());
-        }
-        
-        cidadaoDAO.atualizarCidadao(cidadao);
-        response.sendRedirect(request.getContextPath() + "/cidadao");
+private void atualizarCidadao(HttpServletRequest request, HttpServletResponse response)
+        throws ServletException, IOException {
+    Cidadao cidadao = criarCidadaoAPartirRequest(request);
+    cidadao.setIdCidadao(Integer.parseInt(request.getParameter("id")));
+    
+    // Processar upload da nova imagem (se fornecida)
+    Part filePart = request.getPart("imagem");
+    if (filePart != null && filePart.getSize() > 0) {
+        String caminhoImagem = processarUploadImagem(filePart, request);
+        cidadao.setCaminhoImagem(caminhoImagem);
+    } else {
+        // Manter a imagem existente se nenhuma nova for enviada
+        Cidadao cidadaoExistente = cidadaoDAO.buscarCidadaoPorId(cidadao.getIdCidadao());
+        cidadao.setCaminhoImagem(cidadaoExistente.getCaminhoImagem());
     }
-
+    
+    cidadaoDAO.atualizarCidadao(cidadao);
+    response.sendRedirect(request.getContextPath() + "/cidadao");
+}
     private void deletarCidadao(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         int id = Integer.parseInt(request.getParameter("id"));
@@ -218,23 +222,25 @@ request.setAttribute("classificacoes", classificacoes);
         response.sendError(HttpServletResponse.SC_NOT_FOUND);
     }
 
-    private Cidadao criarCidadaoAPartirRequest(HttpServletRequest request) {
-        Cidadao cidadao = new Cidadao();
-        cidadao.setNome(request.getParameter("nome"));
-        cidadao.setGenero(request.getParameter("genero"));
-        cidadao.setDataNascimento(LocalDate.parse(request.getParameter("dataNascimento")));
-        cidadao.setDocumentoIdentificacao(request.getParameter("documentoIdentificacao"));
-        cidadao.setTelefone(request.getParameter("telefone"));
-        cidadao.setEmail(request.getParameter("email"));
-        cidadao.setNaturalidade(request.getParameter("naturalidade"));
-        cidadao.setRua(request.getParameter("rua"));
-        cidadao.setBairro(request.getParameter("bairro"));
-        cidadao.setCidade(request.getParameter("cidade"));
-cidadao.setClassificacao(request.getParameter("classificacao"));
-
+private Cidadao criarCidadaoAPartirRequest(HttpServletRequest request) {
+    Cidadao cidadao = new Cidadao();
+    cidadao.setNome(request.getParameter("nome"));
+    cidadao.setGenero(request.getParameter("genero"));
+    cidadao.setDataNascimento(LocalDate.parse(request.getParameter("dataNascimento")));
+    cidadao.setDocumentoIdentificacao(request.getParameter("documentoIdentificacao"));
+    cidadao.setTipoDocumento(request.getParameter("tipoDocumento"));
+    cidadao.setTelefone(request.getParameter("telefone"));
+    cidadao.setEmail(request.getParameter("email"));
+    cidadao.setNaturalidade(request.getParameter("naturalidade"));
+    cidadao.setRua(request.getParameter("rua"));
+    cidadao.setBairro(request.getParameter("bairro"));
+    cidadao.setCidade(request.getParameter("cidade"));
+    cidadao.setProvincia(request.getParameter("provincia"));
+    cidadao.setClassificacao(request.getParameter("classificacao"));
+    cidadao.setCaracteristicasFisicas(request.getParameter("caracteristicasFisicas"));
+    
     return cidadao;
-
-    }
+}
     
     private String processarUploadImagem(Part filePart, HttpServletRequest request) throws IOException {
         // Obter o diretório de uploads absoluto
@@ -298,4 +304,25 @@ cidadao.setClassificacao(request.getParameter("classificacao"));
         request.setAttribute("itensPorPagina", itensPorPagina);
         request.getRequestDispatcher("/WEB-INF/views/cidadaos/listCidadaos.jsp").forward(request, response);
     }
-}
+    
+    
+private void visualizarCidadao(HttpServletRequest request, HttpServletResponse response)
+        throws ServletException, IOException {
+    try {
+        int id = Integer.parseInt(request.getParameter("id"));
+        Cidadao cidadao = cidadaoDAO.buscarCidadaoPorId(id);
+        
+        if (cidadao == null) {
+            request.setAttribute("error", "Cidadão não encontrado com ID: " + id);
+            request.getRequestDispatcher("/WEB-INF/views/cidadaos/detalhesCidadao.jsp").forward(request, response);
+            return;
+        }
+        
+        request.setAttribute("cidadao", cidadao);
+        request.getRequestDispatcher("/WEB-INF/views/cidadaos/detalhesCidadao.jsp").forward(request, response);
+        
+    } catch (NumberFormatException e) {
+        request.setAttribute("error", "ID inválido");
+        request.getRequestDispatcher("/WEB-INF/views/cidadaos/detalhesCidadao.jsp").forward(request, response);
+    }
+}}

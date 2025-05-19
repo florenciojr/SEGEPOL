@@ -35,6 +35,7 @@ public class Cidadao {
     private String caminhoImagem;
     private LocalDateTime dataRegistro;
         private String classificacao;
+           private String caracteristicasFisicas; // Adicione esta linha
 
     // Construtores
     public Cidadao() {
@@ -191,6 +192,13 @@ public class Cidadao {
     public void setClassificacao(String classificacao) {
         this.classificacao = classificacao;
     }
+    
+    public void setCaracteristicasFisicas(String caracteristicas) {
+    this.caracteristicasFisicas = caracteristicas;
+}
+    public String getCaracteristicasFisicas() {
+    return caracteristicasFisicas;
+}
 
     // Método toString para representação textual do objeto
     @Override
@@ -215,7 +223,4 @@ public class Cidadao {
                 '}';
     }
 
-    public void setCaracteristicasFisicas(String trim) {
-        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
-    }
 }

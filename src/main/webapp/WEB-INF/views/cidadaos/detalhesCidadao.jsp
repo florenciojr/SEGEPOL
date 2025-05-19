@@ -6,6 +6,7 @@
 
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c"%>
+<%@taglib uri="http://java.sun.com/jsp/jstl/fmt" prefix="fmt"%>
 <!DOCTYPE html>
 <html>
 <head>
@@ -205,6 +206,63 @@
             font-size: 12px;
             color: #7f8c8d;
         }
+
+        /* Estilos para classificações */
+        .classification-comum {
+            background-color: #6c757d;
+            color: white;
+            padding: 3px 8px;
+            border-radius: 3px;
+            display: inline-block;
+        }
+
+        .classification-vitima {
+            background-color: #dc3545;
+            color: white;
+            padding: 3px 8px;
+            border-radius: 3px;
+            display: inline-block;
+        }
+
+        .classification-suspeito {
+            background-color: #fd7e14;
+            color: black;
+            padding: 3px 8px;
+            border-radius: 3px;
+            display: inline-block;
+        }
+
+        .classification-testemunha {
+            background-color: #17a2b8;
+            color: white;
+            padding: 3px 8px;
+            border-radius: 3px;
+            display: inline-block;
+        }
+
+        .classification-informante {
+            background-color: #28a745;
+            color: white;
+            padding: 3px 8px;
+            border-radius: 3px;
+            display: inline-block;
+        }
+
+        .classification-denunciante {
+            background-color: #6610f2;
+            color: white;
+            padding: 3px 8px;
+            border-radius: 3px;
+            display: inline-block;
+        }
+
+        .classification-detido {
+            background-color: #212529;
+            color: white;
+            padding: 3px 8px;
+            border-radius: 3px;
+            display: inline-block;
+        }
         
         @media print {
             .action-buttons {
@@ -222,7 +280,6 @@
             }
         }
     </style>
-    <!-- Adicionando Font Awesome para ícones -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
@@ -263,7 +320,16 @@
                         <div class="document-info">
                             <div class="document-item">
                                 <div class="info-label">Tipo de Documento</div>
-                                <div class="info-value">${cidadao.tipoDocumento}</div>
+                                <div class="info-value">
+                                    <c:choose>
+                                        <c:when test="${not empty cidadao.tipoDocumento}">
+                                            ${cidadao.tipoDocumento}
+                                        </c:when>
+                                        <c:otherwise>
+                                            Não informado
+                                        </c:otherwise>
+                                    </c:choose>
+                                </div>
                             </div>
                             <div class="document-item">
                                 <div class="info-label">Nº Documento</div>
@@ -293,9 +359,35 @@
                     </div>
                     <div class="info-item">
                         <div class="info-label">E-mail</div>
-                        <div class="info-value">${cidadao.email}</div>
+                        <div class="info-value">
+                            <c:choose>
+                                <c:when test="${not empty cidadao.email}">
+                                    ${cidadao.email}
+                                </c:when>
+                                <c:otherwise>
+                                    Não informado
+                                </c:otherwise>
+                            </c:choose>
+                        </div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Classificação</div>
+                        <div class="info-value classification-${cidadao.classificacao.toLowerCase()}">
+                            ${cidadao.classificacao}
+                        </div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Data de Registro</div>
+                        <div class="info-value">
+                            <fmt:formatDate value="${cidadao.dataRegistro}" pattern="dd/MM/yyyy HH:mm:ss"/>
+                        </div>
                     </div>
                 </div>
+                
+                <c:if test="${not empty cidadao.caracteristicasFisicas}">
+                    <h4 class="section-title">Características Físicas</h4>
+                    <div class="info-value" style="white-space: pre-line;">${cidadao.caracteristicasFisicas}</div>
+                </c:if>
                 
                 <h4 class="section-title">Endereço Residencial</h4>
                 <div class="info-grid">

@@ -16,6 +16,7 @@ public class ClassificacaoCidadao {
     private String classificacao;
     private Timestamp dataClassificacao;
     private String observacoes;
+    private String nomeCidadao;
 
     public ClassificacaoCidadao() {}
 
@@ -41,6 +42,14 @@ public class ClassificacaoCidadao {
 
     public String getObservacoes() { return observacoes; }
     public void setObservacoes(String observacoes) { this.observacoes = observacoes; }
+
+        public String getNomeCidadao() {
+        return nomeCidadao;
+    }
+
+    public void setNomeCidadao(String nomeCidadao) {
+        this.nomeCidadao = nomeCidadao;
+    }
 
     @Override
     public String toString() {
