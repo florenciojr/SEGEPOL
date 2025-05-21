@@ -1,0 +1,58 @@
+Diagnóstico do Projeto SIGEPOL
+1. Funcionalidades Já Implementadas (com base nos nomes de arquivos)
+•	Pacote controller:
+•	CidadaoServlet.java
+•	ClassificacaoCidadaoServlet.java
+•	DenuncianteServlet.java
+•	DetencaoServlet.java
+•	InformanteServlet.java
+•	IntimacaoServlet.java
+•	LoginServlet.java
+•	LogoutServlet.java
+•	QueixaServlet.java
+•	SuspeitoServlet.java
+•	TestemunhaServlet.java
+•	TiposQueixaServlet.java
+•	UsuarioServlet.java
+•	VitimaServlet.java
+•	Pacote dao:
+•	CidadaoDAO.java
+•	DenuncianteDAO.java
+•	DetencaoDAO.java
+•	InformanteDAO.java
+•	IntimacaoDAO.java
+•	MandadoPrisaoDAO.java
+•	PatrulhaDAO.java
+•	ProvaDAO.java
+•	QueixaDAO.java
+•	SuspeitoDAO.java
+•	TestemunhaDAO.java
+•	TiposQueixaDAO.java
+•	UsuarioDAO.java
+•	VeiculoRoubadoDAO.java
+•	VitimaDAO.java
+2. Funcionalidades Ainda Não Implementadas
+•	Sistema de Permissões por Perfil de Utilizador
+•	Movimentação de Processo (Status da Queixa)
+•	Relatórios e Estatísticas
+•	Painel (Dashboard)
+•	Notificações Internas
+•	Denúncia Anônima
+•	Autenticação com Duplo Fator (2FA)
+•	Logs de Acesso e Uso
+•	Backup Automático
+•	Versão Offline com Sincronização
+•	Integração com Mapas
+•	Assinatura Digital e Carimbo de Tempo
+•	Pesquisa Avançada
+•	Módulo de Atendimento sem Queixa
+3. Sugestão de Novas Classes a Criar
+•	PermissaoPerfilDAO.java
+•	PerfilUsuarioServlet.java
+•	DashboardServlet.java
+•	RelatorioEstatisticaServlet.java
+•	NotificacaoServlet.java
+•	DenunciaAnonimaServlet.java
+•	LogSistemaDAO.java
+•	AtendimentoServlet.java
+•	AndamentoQueixaServlet.java
