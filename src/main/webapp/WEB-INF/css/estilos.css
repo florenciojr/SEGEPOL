@@ -1,0 +1,597 @@
+/* Estilos gerais */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    line-height: 1.6;
+    margin: 0;
+    padding: 0;
+    color: #333;
+    background-color: #f5f5f5;
+}
+
+header {
+    background-color: #2c3e50;
+    color: white;
+    padding: 1rem 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+header h1 {
+    margin: 0;
+    font-size: 1.5rem;
+}
+
+nav a {
+    color: white;
+    text-decoration: none;
+    margin-left: 1.5rem;
+    font-weight: 500;
+    transition: color 0.2s;
+}
+
+nav a:hover {
+    color: #3498db;
+}
+
+main {
+    padding: 2rem;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+/* Mensagens */
+.mensagem-sucesso {
+    background-color: #d4edda;
+    color: #155724;
+    padding: 0.75rem 1rem;
+    margin-bottom: 1.5rem;
+    border-radius: 4px;
+    border-left: 4px solid #28a745;
+}
+
+.mensagem-erro {
+    background-color: #f8d7da;
+    color: #721c24;
+    padding: 0.75rem 1rem;
+    margin-bottom: 1.5rem;
+    border-radius: 4px;
+    border-left: 4px solid #dc3545;
+}
+
+/* Tabelas */
+.tabela-container {
+    overflow-x: auto;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.tabela-dados {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.tabela-dados th, .tabela-dados td {
+    padding: 0.75rem 1rem;
+    text-align: left;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.tabela-dados th {
+    background-color: #f8f9fa;
+    font-weight: 600;
+    color: #495057;
+}
+
+.tabela-dados tr:hover {
+    background-color: #f8f9fa;
+}
+
+/* Badges de status */
+.status-badge {
+    display: inline-block;
+    padding: 0.35rem 0.65rem;
+    border-radius: 50rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.status-planejada {
+    background-color: #fff3cd;
+    color: #856404;
+}
+
+.status-em-andamento {
+    background-color: #cce5ff;
+    color: #004085;
+}
+
+.status-concluída {
+    background-color: #d4edda;
+    color: #155724;
+}
+
+.status-cancelada {
+    background-color: #f8d7da;
+    color: #721c24;
+}
+
+/* Botões */
+.btn-detalhes, .btn-editar, .btn-iniciar {
+    display: inline-block;
+    padding: 0.35rem 0.65rem;
+    border-radius: 4px;
+    text-decoration: none;
+    margin-right: 0.5rem;
+    transition: all 0.2s;
+}
+
+.btn-detalhes {
+    color: #17a2b8;
+    border: 1px solid #17a2b8;
+}
+
+.btn-detalhes:hover {
+    background-color: #17a2b8;
+    color: white;
+}
+
+.btn-editar {
+    color: #ffc107;
+    border: 1px solid #ffc107;
+}
+
+.btn-editar:hover {
+    background-color: #ffc107;
+    color: #212529;
+}
+
+.btn-iniciar {
+    color: #28a745;
+    border: 1px solid #28a745;
+}
+
+.btn-iniciar:hover {
+    background-color: #28a745;
+    color: white;
+}
+
+/* Formulários */
+.form-patrulha {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.form-group {
+    margin-bottom: 1rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+}
+
+.form-group input[type="text"],
+.form-group input[type="date"],
+.form-group input[type="time"],
+.form-group select,
+.form-group textarea {
+    width: 100%;
+    padding: 0.5rem;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    font-size: 1rem;
+}
+
+.form-group textarea {
+    min-height: 100px;
+    resize: vertical;
+}
+
+.form-actions {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1.5rem;
+}
+
+.btn-salvar, .btn-cancelar {
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 1rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: all 0.2s;
+}
+
+.btn-salvar {
+    background-color: #28a745;
+    color: white;
+}
+
+.btn-salvar:hover {
+    background-color: #218838;
+}
+
+.btn-cancelar {
+    background-color: #6c757d;
+    color: white;
+}
+
+.btn-cancelar:hover {
+    background-color: #5a6268;
+}
+
+/* Detalhes da patrulha */
+.detalhes-container {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.detalhes-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.detalhes-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.detalhes-card {
+    background: #f8f9fa;
+    padding: 1rem;
+    border-radius: 8px;
+    border-left: 4px solid #3498db;
+}
+
+.detalhes-card h3 {
+    margin-top: 0;
+    margin-bottom: 1rem;
+    color: #2c3e50;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.info-item {
+    display: flex;
+    margin-bottom: 0.75rem;
+}
+
+.info-label {
+    font-weight: 500;
+    min-width: 120px;
+    color: #495057;
+}
+
+.info-value {
+    color: #212529;
+}
+
+.usuario-destaque {
+    background: white;
+    padding: 1rem;
+    border-radius: 6px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.usuario-nome {
+    font-weight: 600;
+    font-size: 1.1rem;
+    margin-bottom: 0.25rem;
+}
+
+.usuario-info {
+    display: flex;
+    gap: 1rem;
+    font-size: 0.9rem;
+    color: #6c757d;
+}
+
+.lista-membros {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.lista-membros li {
+    padding: 0.75rem;
+    margin-bottom: 0.5rem;
+    background: white;
+    border-radius: 6px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.membro-info {
+    flex-grow: 1;
+}
+
+.membro-nome {
+    font-weight: 500;
+    margin-bottom: 0.25rem;
+}
+
+.membro-detalhes {
+    display: flex;
+    gap: 1rem;
+    font-size: 0.85rem;
+    color: #6c757d;
+}
+
+.btn-remover {
+    color: #dc3545;
+    text-decoration: none;
+    font-size: 0.85rem;
+    padding: 0.3rem 0.6rem;
+    border: 1px solid #dc3545;
+    border-radius: 4px;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+}
+
+.btn-remover:hover {
+    background-color: #dc3545;
+    color: white;
+}
+
+.sem-membros, .usuario-nao-encontrado, .membro-nao-encontrado {
+    color: #6c757d;
+    font-style: italic;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.detalhes-acoes {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid #e0e0e0;
+}
+
+.btn-editar, .btn-iniciar, .btn-finalizar, .btn-cancelar, .btn-gerenciar {
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 1rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: all 0.2s;
+    text-decoration: none;
+}
+
+.btn-editar {
+    background-color: #ffc107;
+    color: #212529;
+}
+
+.btn-editar:hover {
+    background-color: #e0a800;
+}
+
+.btn-iniciar {
+    background-color: #28a745;
+    color: white;
+}
+
+.btn-iniciar:hover {
+    background-color: #218838;
+}
+
+.btn-finalizar {
+    background-color: #17a2b8;
+    color: white;
+}
+
+.btn-finalizar:hover {
+    background-color: #138496;
+}
+
+.btn-cancelar {
+    background-color: #dc3545;
+    color: white;
+}
+
+.btn-cancelar:hover {
+    background-color: #c82333;
+}
+
+.btn-gerenciar {
+    background-color: #6c757d;
+    color: white;
+    font-size: 0.85rem;
+    padding: 0.35rem 0.75rem;
+}
+
+.btn-gerenciar:hover {
+    background-color: #5a6268;
+}
+
+/* Modal */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.5);
+}
+
+.modal-conteudo {
+    background-color: white;
+    margin: 10% auto;
+    padding: 1.5rem;
+    border-radius: 8px;
+    width: 90%;
+    max-width: 500px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+    position: relative;
+}
+
+.fechar {
+    color: #aaa;
+    position: absolute;
+    right: 1rem;
+    top: 1rem;
+    font-size: 1.5rem;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.fechar:hover {
+    color: #333;
+}
+
+/* Gerenciamento de membros */
+.gerenciamento-membros {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+}
+
+.painel-membros, .adicionar-membro-painel {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.responsavel-painel {
+    margin-bottom: 1.5rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.membros-atuais-painel {
+    margin-bottom: 1.5rem;
+}
+
+.form-adicionar {
+    margin-top: 1.5rem;
+}
+
+.btn-adicionar {
+    background-color: #28a745;
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 1rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: background-color 0.2s;
+    margin-top: 1rem;
+}
+
+.btn-adicionar:hover {
+    background-color: #218838;
+}
+
+.info-adicionar {
+    margin-top: 2rem;
+    padding: 1rem;
+    background-color: #f8f9fa;
+    border-radius: 6px;
+    border-left: 4px solid #6c757d;
+}
+
+.info-adicionar h4 {
+    margin-top: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.info-adicionar ul {
+    padding-left: 1.5rem;
+    margin-bottom: 0;
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+    .detalhes-grid, .gerenciamento-membros {
+        grid-template-columns: 1fr;
+    }
+    
+    .form-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+    
+    nav {
+        width: 100%;
+        display: flex;
+        justify-content: space-between;
+    }
+    
+    nav a {
+        margin: 0;
+    }
+    
+    .membros-selecao {
+    max-height: 300px;
+    overflow-y: auto;
+    border: 1px solid #ddd;
+    padding: 10px;
+    border-radius: 4px;
+    background: #f9f9f9;
+}
+
+.checkbox-membro {
+    margin: 8px 0;
+    padding: 8px;
+    background: white;
+    border-radius: 4px;
+    border-left: 3px solid #3498db;
+}
+
+.checkbox-membro:hover {
+    background: #f0f0f0;
+}
+
+.checkbox-membro input[type="checkbox"] {
+    margin-right: 10px;
+}
+}

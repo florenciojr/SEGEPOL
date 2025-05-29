@@ -11,17 +11,20 @@ package model;
 
 
 
+import java.text.Normalizer;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 /**
- * Modelo que representa a tabela patrulhas do banco de dados
- * com gestão completa de membros na coluna dedicada
+ * Modelo que representa uma patrulha com gestão completa de membros
  */
 public class Patrulha {
     private int idPatrulha;
@@ -36,11 +39,14 @@ public class Patrulha {
     private String status;
     private LocalDateTime criadoEm;
     private LocalDateTime atualizadoEm;
+    private String zonaAtuacao;
+ 
 
     public Patrulha() {
         this.membrosIds = new ArrayList<>();
         this.tipo = "Ronda";
         this.status = "Planejada";
+        this.zonaAtuacao = "";  // Inicializa o novo campo
     }
 
     // Getters e Setters básicos
@@ -55,13 +61,21 @@ public class Patrulha {
         }
         this.idPatrulha = idPatrulha;
     }
+    
+        public String getZonaAtuacao() {
+        return zonaAtuacao;
+    }
+    
+    public void setZonaAtuacao(String zonaAtuacao) {
+        this.zonaAtuacao = zonaAtuacao;
+    }
 
     public String getNome() {
         return nome;
     }
 
     public void setNome(String nome) {
-        this.nome = validarCampoTexto(nome, "Nome", 50);
+        this.nome = validarCampoTexto(nome, "Nome", 100);
     }
 
     public int getResponsavelId() {
@@ -94,10 +108,11 @@ public class Patrulha {
         return horaInicio;
     }
 
-    public void setHoraInicio(LocalTime horaInicio) {
-        this.horaInicio = Objects.requireNonNull(horaInicio, "Hora de início não pode ser nula");
-        validarHoraInicio();
-    }
+// Método setHoraInicio original (mantido para uso normal)
+public void setHoraInicio(LocalTime horaInicio) {
+    this.horaInicio = Objects.requireNonNull(horaInicio, "Hora de início não pode ser nula");
+    validarHoraInicio(true);  // Sempre valida quando chamado normalmente
+}
 
     public LocalTime getHoraFim() {
         return horaFim;
@@ -114,12 +129,29 @@ public class Patrulha {
         return tipo;
     }
 
-    public void setTipo(String tipo) {
-        if (tipo != null && !tipo.matches("^(Ronda|Operação|Especial)$")) {
-            throw new IllegalArgumentException("Tipo deve ser Ronda, Operação ou Especial");
-        }
-        this.tipo = tipo != null ? tipo : "Ronda";
+public void setTipo(String tipo) {
+    // Normaliza o tipo removendo acentos e convertendo para primeira letra maiúscula
+    String tipoNormalizado = normalizarTipo(tipo);
+    
+    List<String> tiposValidos = List.of("Ronda", "Operacao", "Especial", "Preventiva");
+    
+    if (tipoNormalizado == null || !tiposValidos.contains(tipoNormalizado)) {
+        throw new IllegalArgumentException("Tipo deve ser: " + String.join(", ", tiposValidos));
     }
+    this.tipo = tipoNormalizado;
+}
+
+// Método auxiliar para normalizar o tipo
+private String normalizarTipo(String tipo) {
+    if (tipo == null) return null;
+    
+    // Remove acentos e converte para ASCII simples
+    tipo = Normalizer.normalize(tipo, Normalizer.Form.NFD)
+                    .replaceAll("[^\\p{ASCII}]", "");
+    
+    // Converte para primeira letra maiúscula
+    return tipo.substring(0, 1).toUpperCase() + tipo.substring(1).toLowerCase();
+}
 
     public String getObservacoes() {
         return observacoes;
@@ -127,8 +159,8 @@ public class Patrulha {
 
     public void setObservacoes(String observacoes) {
         this.observacoes = observacoes != null ? observacoes.trim() : null;
-        if (this.observacoes != null && this.observacoes.length() > 65535) {
-            throw new IllegalArgumentException("Observações excedem o tamanho máximo permitido");
+        if (this.observacoes != null && this.observacoes.length() > 2000) {
+            throw new IllegalArgumentException("Observações excedem o tamanho máximo de 2000 caracteres");
         }
     }
 
@@ -137,8 +169,9 @@ public class Patrulha {
     }
 
     public void setStatus(String status) {
-        if (status != null && !status.matches("^(Planejada|Em Andamento|Concluída|Cancelada)$")) {
-            throw new IllegalArgumentException("Status inválido");
+        List<String> statusValidos = List.of("Planejada", "Em Andamento", "Concluída", "Cancelada");
+        if (status != null && !statusValidos.contains(status)) {
+            throw new IllegalArgumentException("Status inválido. Valores permitidos: " + String.join(", ", statusValidos));
         }
         this.status = status != null ? status : "Planejada";
     }
@@ -159,7 +192,7 @@ public class Patrulha {
         this.atualizadoEm = atualizadoEm;
     }
 
-    // Métodos específicos para gestão de membros
+    // Gestão de Membros
 
     public List<Integer> getMembrosIds() {
         return Collections.unmodifiableList(membrosIds);
@@ -178,6 +211,9 @@ public class Patrulha {
         if (idMembro <= 0) {
             throw new IllegalArgumentException("ID do membro deve ser positivo");
         }
+        if (idMembro == this.responsavelId) {
+            throw new IllegalArgumentException("O responsável já é automaticamente membro");
+        }
         if (!this.membrosIds.contains(idMembro)) {
             this.membrosIds.add(idMembro);
         }
@@ -190,19 +226,14 @@ public class Patrulha {
         this.membrosIds.remove(Integer.valueOf(idMembro));
     }
 
+    public boolean contemMembro(int idUsuario) {
+        return this.membrosIds.contains(idUsuario) || this.responsavelId == idUsuario;
+    }
+
     public String getMembrosAsString() {
-        if (membrosIds.isEmpty()) {
-            return "";
-        }
-        
-        StringBuilder sb = new StringBuilder();
-        for (Integer id : membrosIds) {
-            if (sb.length() > 0) {
-                sb.append(",");
-            }
-            sb.append(id);
-        }
-        return sb.toString();
+        return membrosIds.stream()
+                       .map(String::valueOf)
+                       .collect(Collectors.joining(","));
     }
 
     public void setMembrosFromString(String membrosStr) {
@@ -212,21 +243,53 @@ public class Patrulha {
             return;
         }
         
-        String[] ids = membrosStr.split(",");
-        for (String idStr : ids) {
-            try {
-                int id = Integer.parseInt(idStr.trim());
-                if (id > 0 && !this.membrosIds.contains(id)) {
-                    this.membrosIds.add(id);
-                }
-            } catch (NumberFormatException e) {
-                System.err.println("ID inválido ignorado: " + idStr);
-            }
-        }
+        Arrays.stream(membrosStr.split(","))
+              .map(String::trim)
+              .filter(s -> !s.isEmpty())
+              .mapToInt(Integer::parseInt)
+              .filter(id -> id > 0)
+              .distinct()
+              .forEach(this.membrosIds::add);
     }
 
-    public boolean isMembro(int idUsuario) {
-        return this.membrosIds.contains(idUsuario) || this.responsavelId == idUsuario;
+    // Métodos auxiliares para visualização
+
+    public String getNomeResponsavel(Map<Integer, Usuario> usuarios) {
+        Usuario usuario = usuarios.get(this.responsavelId);
+        return usuario != null ? usuario.getNome() : "ID: " + this.responsavelId;
+    }
+
+    public String getCargoResponsavel(Map<Integer, Usuario> usuarios) {
+        Usuario usuario = usuarios.get(this.responsavelId);
+        return usuario != null ? usuario.getCargo() : "Não encontrado";
+    }
+
+    public List<String> getNomesMembros(Map<Integer, Usuario> usuarios) {
+        return this.membrosIds.stream()
+                            .map(id -> {
+                                Usuario usuario = usuarios.get(id);
+                                return usuario != null ? usuario.getNome() : "ID: " + id;
+                            })
+                            .collect(Collectors.toList());
+    }
+
+    // Validações de negócio
+
+    public boolean podeSerIniciada() {
+        return "Planejada".equals(this.status) && 
+               this.data != null && 
+               this.horaInicio != null &&
+               this.membrosIds.size() >= 2; // Pelo menos 2 membros (responsável + outro)
+    }
+
+    public boolean podeSerFinalizada() {
+        return "Em Andamento".equals(this.status) && 
+               this.horaInicio != null;
+    }
+
+    public boolean podeSerCancelada() {
+        return !"Cancelada".equals(this.status) && 
+               !"Concluída".equals(this.status);
     }
 
     // Métodos auxiliares privados
@@ -243,31 +306,22 @@ public class Patrulha {
         return valor;
     }
 
-    private void validarHoraInicio() {
-        if (this.data != null && this.data.equals(LocalDate.now()) && 
-            horaInicio.isBefore(LocalTime.now())) {
+ // Método modificado para validar hora de início
+private void validarHoraInicio(boolean validarPassado) {
+    if (validarPassado && this.data != null && this.data.equals(LocalDate.now())) {
+        if (this.horaInicio.isBefore(LocalTime.now())) {
             throw new IllegalArgumentException("Hora de início não pode ser no passado para a data atual");
         }
     }
+}
 
-    // Métodos de negócio
 
-    public boolean estaAtiva() {
-        return "Em Andamento".equals(this.status) && 
-               this.data != null && 
-               this.horaInicio != null;
-    }
 
-    public boolean podeSerIniciada() {
-        return "Planejada".equals(this.status) && 
-               this.data != null && 
-               this.horaInicio != null &&
-               !this.membrosIds.isEmpty();
-    }
-
-    public boolean podeSerFinalizada() {
-        return "Em Andamento".equals(this.status);
-    }
+// Novo método para uso no DAO (sem validação de passado)
+public void setHoraInicioFromDB(LocalTime horaInicio) {
+    this.horaInicio = Objects.requireNonNull(horaInicio, "Hora de início não pode ser nula");
+    // Não chama validarHoraInicio() - usado apenas para carregar dados existentes
+}
 
     // Representações do objeto
 
@@ -276,15 +330,18 @@ public class Patrulha {
                 idPatrulha, nome, tipo, data, horaInicio);
     }
 
-    public String toDetalhes() {
-        return String.format(
-            "Patrulha %d\nNome: %s\nResponsável: %d\nData: %s\nHora Início: %s\n" +
-            "Hora Fim: %s\nTipo: %s\nStatus: %s\nMembros: %s\nObservações: %s",
-            idPatrulha, nome, responsavelId, data, horaInicio, 
-            horaFim != null ? horaFim : "N/A", 
-            tipo, status, 
-            String.join(", ", getMembrosAsString()),
-            observacoes != null ? observacoes : "Nenhuma"
+    public Map<String, Object> toMap() {
+        return Map.of(
+            "id", idPatrulha,
+            "nome", nome,
+            "responsavelId", responsavelId,
+            "membrosIds", new ArrayList<>(membrosIds), // Cópia defensiva
+            "data", data,
+            "horaInicio", horaInicio,
+            "horaFim", horaFim,
+            "tipo", tipo,
+            "status", status,
+            "observacoes", observacoes != null ? observacoes : ""
         );
     }
 
@@ -299,10 +356,10 @@ public class Patrulha {
                 ", horaInicio=" + horaInicio +
                 ", horaFim=" + horaFim +
                 ", tipo='" + tipo + '\'' +
-                ", observacoes='" + observacoes + '\'' +
                 ", status='" + status + '\'' +
                 ", criadoEm=" + criadoEm +
                 ", atualizadoEm=" + atualizadoEm +
+                ", zonaAtuacao='" + zonaAtuacao + '\'' +
                 '}';
     }
 
@@ -317,5 +374,9 @@ public class Patrulha {
     @Override
     public int hashCode() {
         return Objects.hash(idPatrulha);
+    }
+
+    public String toDetalhes() {
+        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
     }
 }
