@@ -106,6 +106,19 @@ public boolean atualizar(Patrulha patrulha) throws SQLException {
         return stmt.executeUpdate() > 0;
     }
 }
+
+
+public void validarPatrulha(Patrulha patrulha) {
+    if (patrulha.getStatus().equals("Planejada") || patrulha.getStatus().equals("Em Andamento")) {
+        if (patrulha.getData().isBefore(LocalDate.now())) {
+            // Atualizar status automaticamente ou lançar exceção
+            patrulha.setStatus("Concluída");
+            // Ou: throw new IllegalStateException("Patrulha com data passada deve ser concluída");
+        }
+    }
+    
+    // Outras validações...
+}
     
     // Método para listar todas as patrulhas
     public List<Patrulha> listarTodas() throws SQLException {
@@ -115,7 +128,7 @@ public boolean atualizar(Patrulha patrulha) throws SQLException {
         try (Connection conn = Conexao.conectar();
              Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery(sql)) {
-            
+             patrulhas.forEach(this::validarPatrulha);
             while (rs.next()) {
                 patrulhas.add(criarPatrulhaFromResultSet(rs));
             }
@@ -242,9 +255,10 @@ private Patrulha criarPatrulhaFromResultSet(ResultSet rs) throws SQLException {
         patrulha.setMembrosFromString(membrosStr);
     }
     
-    patrulha.setData(rs.getDate("data").toLocalDate());
+    // Usar setDataFromDB para carregamento inicial sem validação
+    patrulha.setDataFromDB(rs.getDate("data").toLocalDate());
     
-    // Usar o novo método que não valida hora no passado
+    // Configurar outros campos
     patrulha.setHoraInicioFromDB(rs.getTime("hora_inicio").toLocalTime());
     
     Time horaFim = rs.getTime("hora_fim");
@@ -257,15 +271,8 @@ private Patrulha criarPatrulhaFromResultSet(ResultSet rs) throws SQLException {
     patrulha.setObservacoes(rs.getString("observacoes"));
     patrulha.setStatus(rs.getString("status"));
     
-    Timestamp criadoEm = rs.getTimestamp("criado_em");
-    if (criadoEm != null) {
-        patrulha.setCriadoEm(criadoEm.toLocalDateTime());
-    }
-    
-    Timestamp atualizadoEm = rs.getTimestamp("atualizado_em");
-    if (atualizadoEm != null) {
-        patrulha.setAtualizadoEm(atualizadoEm.toLocalDateTime());
-    }
+    // Validar a patrulha após carregamento
+    patrulha.validar();
     
     return patrulha;
 }

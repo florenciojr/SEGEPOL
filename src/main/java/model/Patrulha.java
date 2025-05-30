@@ -48,6 +48,23 @@ public class Patrulha {
         this.status = "Planejada";
         this.zonaAtuacao = "";  // Inicializa o novo campo
     }
+    
+    
+    public static class Builder {
+    private Patrulha patrulha = new Patrulha();
+    
+    public Builder comData(LocalDate data) {
+        patrulha.setData(data);
+        return this;
+    }
+    // outros métodos...
+    
+    public Patrulha build() {
+        patrulha.validar();
+        return patrulha;
+    }
+}
+    
 
     // Getters e Setters básicos
 
@@ -97,12 +114,28 @@ public class Patrulha {
         return data;
     }
 
-    public void setData(LocalDate data) {
-        this.data = Objects.requireNonNull(data, "Data não pode ser nula");
-        if (data.isBefore(LocalDate.now())) {
-            throw new IllegalArgumentException("Data não pode ser no passado");
+public void setData(LocalDate data, boolean validarPassado) {
+    this.data = Objects.requireNonNull(data, "Data não pode ser nula");
+    
+    if (validarPassado && data.isBefore(LocalDate.now())) {
+        // Ajuste automático do status para patrulhas com data passada
+        if ("Planejada".equals(this.status) || "Em Andamento".equals(this.status)) {
+            this.status = "Concluída";
+            this.adicionarAoHistorico("Status alterado automaticamente para 'Concluída' devido a data passada");
         }
     }
+}
+
+// Método original mantido para compatibilidade
+public void setData(LocalDate data) {
+    setData(data, true); // Validação ativada por padrão
+}
+
+// Método para carregamento do banco de dados
+public void setDataFromDB(LocalDate data) {
+    setData(data, false); // Validação desativada
+}
+
 
     public LocalTime getHoraInicio() {
         return horaInicio;
@@ -168,13 +201,29 @@ private String normalizarTipo(String tipo) {
         return status;
     }
 
-    public void setStatus(String status) {
-        List<String> statusValidos = List.of("Planejada", "Em Andamento", "Concluída", "Cancelada");
-        if (status != null && !statusValidos.contains(status)) {
-            throw new IllegalArgumentException("Status inválido. Valores permitidos: " + String.join(", ", statusValidos));
-        }
-        this.status = status != null ? status : "Planejada";
+public void setStatus(String status) {
+    // Normaliza o status removendo acentos
+    String statusNormalizado = normalizarStatus(status);
+    
+    List<String> statusValidos = List.of("Planejada", "Em Andamento", "Concluida", "Cancelada");
+    
+    if (statusNormalizado != null && !statusValidos.contains(statusNormalizado)) {
+        throw new IllegalArgumentException("Status inválido. Valores permitidos: " + 
+            String.join(", ", statusValidos));
     }
+    this.status = statusNormalizado != null ? statusNormalizado : "Planejada";
+}
+
+// Método auxiliar para normalizar o status
+private String normalizarStatus(String status) {
+    if (status == null) return null;
+    
+    // Remove acentos e converte para ASCII simples
+    status = Normalizer.normalize(status, Normalizer.Form.NFD)
+                     .replaceAll("[^\\p{ASCII}]", "");
+    
+    return status;
+}
 
     public LocalDateTime getCriadoEm() {
         return criadoEm;
@@ -274,6 +323,23 @@ private String normalizarTipo(String tipo) {
     }
 
     // Validações de negócio
+    public void validar() {
+    if (this.data == null) {
+        throw new IllegalStateException("Data da patrulha não pode ser nula");
+    }
+    
+    if ("Planejada".equals(this.status) && this.data.isBefore(LocalDate.now())) {
+        throw new IllegalStateException("Patrulhas planejadas não podem ter data no passado");
+    }
+    
+    if (this.horaInicio != null && this.horaFim != null && this.horaFim.isBefore(this.horaInicio)) {
+        throw new IllegalStateException("Hora de fim não pode ser antes da hora de início");
+    }
+    
+    if (this.membrosIds.size() < 2) {
+        throw new IllegalStateException("Patrulha deve ter pelo menos 2 membros");
+    }
+}
 
     public boolean podeSerIniciada() {
         return "Planejada".equals(this.status) && 
@@ -305,6 +371,26 @@ private String normalizarTipo(String tipo) {
         }
         return valor;
     }
+    
+    public void avancarStatus() {
+    switch (this.status) {
+        case "Planejada":
+            if (podeSerIniciada()) this.status = "Em Andamento";
+            break;
+        case "Em Andamento":
+            if (podeSerFinalizada()) this.status = "Concluída";
+            break;
+        default:
+            throw new IllegalStateException("Não é possível avançar o status atual");
+    }
+}
+    
+    
+    private List<String> historicoAlteracoes = new ArrayList<>();
+
+public void adicionarAoHistorico(String alteracao) {
+    this.historicoAlteracoes.add(LocalDateTime.now() + " - " + alteracao);
+}
 
  // Método modificado para validar hora de início
 private void validarHoraInicio(boolean validarPassado) {
@@ -314,6 +400,15 @@ private void validarHoraInicio(boolean validarPassado) {
         }
     }
 }
+
+public void validarPatrulha(Patrulha patrulha) {
+    if (patrulha.getStatus().equals("Planejada") || patrulha.getStatus().equals("Em Andamento")) {
+        if (patrulha.getData().isBefore(LocalDate.now())) {
+            // Atualizar status automaticamente ou lançar exceção
+            patrulha.setStatus("Concluída");
+            // Ou: throw new IllegalStateException("Patrulha com data passada deve ser concluída");
+        }
+    }}
 
 
 

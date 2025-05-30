@@ -101,23 +101,36 @@ public class PatrulhaServlet extends HttpServlet {
         }
     }
 
-private void listarPatrulhas(HttpServletRequest request, HttpServletResponse response) 
-            throws ServletException, IOException, SQLException {
+protected void listarPatrulhas(HttpServletRequest request, HttpServletResponse response) 
+    throws ServletException, IOException {
+    try {
         List<Patrulha> patrulhas = patrulhaDAO.listarTodas();
         
-        // Coletar IDs dos responsáveis
-        Set<Integer> idsResponsaveis = patrulhas.stream()
-                                              .map(Patrulha::getResponsavelId)
-                                              .collect(Collectors.toSet());
-        
-        // Buscar informações completas dos responsáveis
-        Map<Integer, Usuario> usuariosResponsaveis = patrulhaDAO.buscarUsuariosCompletos(idsResponsaveis);
+        // Processar patrulhas com datas passadas
+        patrulhas.forEach(p -> {
+            if (p.getData().isBefore(LocalDate.now()) && 
+                !"Concluída".equals(p.getStatus()) && 
+                !"Cancelada".equals(p.getStatus())) {
+                
+                try {
+                    // Atualizar status no banco de dados
+                    patrulhaDAO.finalizar(p.getIdPatrulha(), LocalTime.now(), 
+                        "Finalizada automaticamente - data passada");
+                    p.setStatus("Concluída");
+                } catch (SQLException e) {
+                    // Logar erro sem interromper o fluxo
+                    System.err.println("Erro ao atualizar patrulha: " + e.getMessage());
+                }
+            }
+        });
         
         request.setAttribute("patrulhas", patrulhas);
-        request.setAttribute("usuariosResponsaveis", usuariosResponsaveis);
-        RequestDispatcher dispatcher = request.getRequestDispatcher("/WEB-INF/views/patrulhas/listar.jsp");
-        dispatcher.forward(request, response);
+        request.getRequestDispatcher("/WEB-INF/views/patrulhas/listar.jsp").forward(request, response);
+    } catch (Exception e) {
+        request.setAttribute("erro", "Erro ao listar patrulhas: " + e.getMessage());
+        request.getRequestDispatcher("/erro.jsp").forward(request, response);
     }
+}
 
     private void mostrarDetalhes(HttpServletRequest request, HttpServletResponse response) 
             throws ServletException, IOException, SQLException {
@@ -331,7 +344,7 @@ private void editarPatrulha(HttpServletRequest request, HttpServletResponse resp
     patrulha.setTipo(request.getParameter("tipo"));
     patrulha.setZonaAtuacao(request.getParameter("zonaAtuacao")); 
     patrulha.setObservacoes(request.getParameter("observacoes"));
-    patrulha.setStatus(request.getParameter("status"));
+   patrulha.setStatus(request.getParameter("status"));
     
     // Processar membros selecionados
     String[] membrosSelecionados = request.getParameterValues("membros");
