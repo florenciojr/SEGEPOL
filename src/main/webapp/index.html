@@ -1,10 +1,302 @@
 <!DOCTYPE html>
-<html>
-    <head>
-        <title>Start Page</title>
-        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-    </head>
-    <body>
-        <h1>Hello World!</h1>
-    </body>
-</html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registro de Queixas - Polícia da República de Moçambique</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f0f0f0;
+            color: #333;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: white;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        header {
+            background-color: #005f29;
+            color: white;
+            padding: 10px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .logo {
+            width: 80px;
+            height: 80px;
+            background-color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: #005f29;
+            font-size: 12px;
+            text-align: center;
+        }
+        h1 {
+            margin: 0;
+            font-size: 24px;
+            text-align: center;
+            flex-grow: 1;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input, select, textarea {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        textarea {
+            height: 100px;
+            resize: vertical;
+        }
+        .form-row {
+            display: flex;
+            gap: 15px;
+        }
+        .form-row > div {
+            flex: 1;
+        }
+        .btn-submit {
+            background-color: #005f29;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            cursor: pointer;
+            font-size: 16px;
+            border-radius: 4px;
+            display: block;
+            margin: 20px auto;
+        }
+        .btn-submit:hover {
+            background-color: #004720;
+        }
+        .official-use {
+            margin-top: 30px;
+            border-top: 2px solid #005f29;
+            padding-top: 15px;
+        }
+        .stamp-area {
+            border: 1px dashed #888;
+            height: 100px;
+            margin: 15px 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-style: italic;
+            color: #888;
+        }
+        footer {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 12px;
+            color: #666;
+        }
+        .reference-number {
+            text-align: right;
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 15px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">POLÍCIA RP MOÇAMBIQUE</div>
+            <h1>FORMULÁRIO DE REGISTRO DE QUEIXAS</h1>
+            <div class="logo">PRM</div>
+        </header>
+        
+        <div class="reference-number">
+            Ref: PRM/______/______/2025
+        </div>
+        
+        <form id="queixaForm">
+            <div class="form-group">
+                <label for="titulo">Título da Queixa:</label>
+                <input type="text" id="titulo" name="titulo" required>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="dataAcidente">Data do Acidente:</label>
+                    <input type="date" id="dataAcidente" name="dataAcidente" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="hora">Hora:</label>
+                    <input type="time" id="hora" name="hora">
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="local">Local do Acidente:</label>
+                <input type="text" id="local" name="local" required placeholder="Endereço completo/Referência">
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="distrito">Distrito:</label>
+                    <input type="text" id="distrito" name="distrito">
+                </div>
+                
+                <div class="form-group">
+                    <label for="provincia">Província:</label>
+                    <select id="provincia" name="provincia">
+                        <option value="">Selecione</option>
+                        <option value="Maputo Cidade">Maputo Cidade</option>
+                        <option value="Maputo Província">Maputo Província</option>
+                        <option value="Gaza">Gaza</option>
+                        <option value="Inhambane">Inhambane</option>
+                        <option value="Sofala">Sofala</option>
+                        <option value="Manica">Manica</option>
+                        <option value="Tete">Tete</option>
+                        <option value="Zambézia">Zambézia</option>
+                        <option value="Nampula">Nampula</option>
+                        <option value="Cabo Delgado">Cabo Delgado</option>
+                        <option value="Niassa">Niassa</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="tipoQueixa">Tipo de Queixa:</label>
+                <select id="tipoQueixa" name="tipoQueixa" required>
+                    <option value="">Selecione</option>
+                    <option value="Furto">Furto</option>
+                    <option value="Roubo">Roubo</option>
+                    <option value="Agressão">Agressão</option>
+                    <option value="Perturbação da Ordem Pública">Perturbação da Ordem Pública</option>
+                    <option value="Violência Doméstica">Violência Doméstica</option>
+                    <option value="Acidente de Viação">Acidente de Viação</option>
+                    <option value="Desaparecimento de Pessoa">Desaparecimento de Pessoa</option>
+                    <option value="Ameaça">Ameaça</option>
+                    <option value="Danos Materiais">Danos Materiais</option>
+                    <option value="Outro">Outro</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="outroTipo" id="outroTipoLabel" style="display: none;">Especifique o Tipo:</label>
+                <input type="text" id="outroTipo" name="outroTipo" style="display: none;">
+            </div>
+            
+            <div class="form-group">
+                <label for="descricao">Descrição Detalhada do Incidente:</label>
+                <textarea id="descricao" name="descricao" required placeholder="Descreva todos os detalhes relevantes do incidente, incluindo hora, local exato, pessoas envolvidas e quaisquer outras informações importantes"></textarea>
+            </div>
+            
+            <div class="form-group">
+                <label for="citacao">Citação de Testemunhas ou Envolvidos:</label>
+                <textarea id="citacao" name="citacao" placeholder="Nome e contacto de testemunhas ou outras pessoas envolvidas no incidente"></textarea>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="nomeQueixoso">Nome do Queixoso:</label>
+                    <input type="text" id="nomeQueixoso" name="nomeQueixoso" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="biQueixoso">Número de BI/DIRE:</label>
+                    <input type="text" id="biQueixoso" name="biQueixoso" required>
+                </div>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="contactoQueixoso">Contacto:</label>
+                    <input type="tel" id="contactoQueixoso" name="contactoQueixoso">
+                </div>
+                
+                <div class="form-group">
+                    <label for="moradaQueixoso">Morada:</label>
+                    <input type="text" id="moradaQueixoso" name="moradaQueixoso">
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="responsavel">Responsável pela Queixa (Se diferente do queixoso):</label>
+                <input type="text" id="responsavel" name="responsavel">
+            </div>
+            
+            <button type="submit" class="btn-submit">SUBMETER QUEIXA</button>
+        </form>
+        
+        <div class="official-use">
+            <h3>PARA USO OFICIAL</h3>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="numeroProcesso">Número do Processo:</label>
+                    <input type="text" id="numeroProcesso" name="numeroProcesso" disabled>
+                </div>
+                
+                <div class="form-group">
+                    <label for="dataRegistro">Data de Registro:</label>
+                    <input type="text" id="dataRegistro" name="dataRegistro" disabled>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="agenteResponsavel">Agente Responsável:</label>
+                <input type="text" id="agenteResponsavel" name="agenteResponsavel" disabled>
+            </div>
+            
+            <div class="form-group">
+                <label for="observacoes">Observações:</label>
+                <textarea id="observacoes" name="observacoes" disabled></textarea>
+            </div>
+            
+            <div class="stamp-area">
+                Área para Carimbo e Assinatura
+            </div>
+        </div>
+        
+        <footer>
+            <p>POLÍCIA DA REPÚBLICA DE MOÇAMBIQUE - COMBATENDO O CRIME AO SERVIÇO DO POVO</p>
+            <p>© 2025 - Todos os direitos reservados</p>
+        </footer>
+    </div>
+    
+    <script>
+        // Mostrar campo "Outro" quando esta opção for selecionada
+        document.getElementById('tipoQueixa').addEventListener('change', function() {
+            if (this.value === 'Outro') {
+                document.getElementById('outroTipo').style.display = 'block';
+                document.getElementById('outroTipoLabel').style.display = 'block';
+            } else {
+                document.getElementById('outroTipo').style.display = 'none';
+                document.getElementById('outroTipoLabel').style.display = 'none';
+            }
+        });
+        
+        // Impedir envio do formulário (para demonstração)
+        document.getElementById('queixaForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            alert('Queixa registrada com sucesso! Número de referência: PRM/2025/' + Math.floor(Math.random() * 10000));
+        });
+        
+        // Preencher data atual
+        const today = new Date();
+        const formattedDate = today.toISOString().substr(0, 10);
+        document.getElementById('dataAcidente').value = formattedDate;
+    </script>
+</body>
+</html>>
