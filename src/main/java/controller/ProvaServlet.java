@@ -66,13 +66,14 @@ public class ProvaServlet extends HttpServlet {
     private UsuarioDAO usuarioDAO;
     private UploadHandler uploadHandler;
 
-    @Override
-    public void init() {
-        provaDAO = new ProvaDAO();
-        queixaDAO = new QueixaDAO();
-        usuarioDAO = new UsuarioDAO();
-        uploadHandler = new UploadHandler();
-    }
+@Override
+public void init() {
+    provaDAO = new ProvaDAO();
+    queixaDAO = new QueixaDAO();
+    usuarioDAO = new UsuarioDAO();
+    uploadHandler = new UploadHandler(getServletContext());
+    uploadHandler.printUploadPath();
+}
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) 
