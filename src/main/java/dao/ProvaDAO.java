@@ -9,6 +9,7 @@ package dao;
  * @author JR5
  */
 
+
 import model.Prova;
 import util.Conexao;
 import java.io.File;
@@ -17,26 +18,159 @@ import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.sql.*;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
-import java.util.Scanner;
+import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import model.ProvaDetalhada;
 
 public class ProvaDAO {
-    private Connection conexao;
-    private final String DIRETORIO_UPLOAD = "uploads/provas/";
+    private static final Logger LOGGER = Logger.getLogger(ProvaDAO.class.getName());
+    private static final String DIRETORIO_UPLOAD = "uploads/provas/";
 
+    
+   
+    public ProvaDetalhada buscarProvaDetalhada(int idProva) throws SQLException {
+    String sql = "SELECT p.*, q.titulo AS titulo_queixa, u.nome AS nome_usuario " +
+                 "FROM provas p " +
+                 "LEFT JOIN queixas q ON p.id_queixa = q.id_queixa " +
+                 "LEFT JOIN usuarios u ON p.id_usuario = u.id_usuario " +
+                 "WHERE p.id_prova = ?";
+    
+    try (Connection conn = Conexao.conectar();
+         PreparedStatement stmt = conn.prepareStatement(sql)) {
+        
+        stmt.setInt(1, idProva);
+        
+        try (ResultSet rs = stmt.executeQuery()) {
+            if (rs.next()) {
+                // Mapeia os dados básicos da prova
+                Prova prova = new Prova();
+                prova.setIdProva(rs.getInt("id_prova"));
+                prova.setIdQueixa(rs.getInt("id_queixa"));
+                prova.setTipo(rs.getString("tipo"));
+                prova.setDescricao(rs.getString("descricao"));
+                prova.setCaminhoArquivo(rs.getString("caminho_arquivo"));
+                prova.setDataColeta(rs.getTimestamp("data_coleta"));
+                prova.setDataUpload(rs.getTimestamp("data_upload"));
+                prova.setIdUsuario(rs.getInt("id_usuario"));
+                
+                // Cria a prova detalhada
+                return new ProvaDetalhada(
+                    prova,
+                    rs.getString("titulo_queixa"),
+                    rs.getString("nome_usuario")
+                );
+            }
+        }
+    }
+    return null;
+}
+    
+    
+
+    public List<Prova> listarTodasComRelacionamentos() throws SQLException {
+        List<Prova> provas = new ArrayList<>();
+        String sql = "SELECT p.*, q.titulo AS titulo_queixa, u.nome AS nome_usuario " +
+                     "FROM provas p " +
+                     "LEFT JOIN queixas q ON p.id_queixa = q.id_queixa " +
+                     "LEFT JOIN usuarios u ON p.id_usuario = u.id_usuario " +
+                     "ORDER BY p.data_upload DESC";
+        
+        try (Connection conn = Conexao.conectar();
+             PreparedStatement stmt = conn.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+            
+            while (rs.next()) {
+                provas.add(mapearProvaComRelacionamentos(rs));
+            }
+        }
+        return provas;
+    }
+
+    public Prova buscarPorIdComRelacionamentos(int id) throws SQLException {
+        String sql = "SELECT p.*, q.titulo AS titulo_queixa, u.nome AS nome_usuario " +
+                     "FROM provas p " +
+                     "LEFT JOIN queixas q ON p.id_queixa = q.id_queixa " +
+                     "LEFT JOIN usuarios u ON p.id_usuario = u.id_usuario " +
+                     "WHERE p.id_prova = ?";
+        
+        try (Connection conn = Conexao.conectar();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            
+            stmt.setInt(1, id);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return mapearProvaComRelacionamentos(rs);
+                }
+            }
+        }
+        return null;
+    }
+
+private ProvaDetalhada mapearProvaComRelacionamentos(ResultSet rs) throws SQLException {
+    ProvaDetalhada prova = new ProvaDetalhada();
+    
+    // Mapear campos básicos da Prova
+    prova.setIdProva(rs.getInt("id_prova"));
+    prova.setIdQueixa(rs.getInt("id_queixa"));
+    prova.setTipo(rs.getString("tipo"));
+    prova.setDescricao(rs.getString("descricao"));
+    prova.setCaminhoArquivo(rs.getString("caminho_arquivo"));
+    prova.setDataColeta(rs.getTimestamp("data_coleta"));
+    prova.setDataUpload(rs.getTimestamp("data_upload"));
+    prova.setIdUsuario(rs.getInt("id_usuario"));
+    
+    // Mapear campos adicionais
+    prova.setTituloQueixa(rs.getString("titulo_queixa"));
+    prova.setNomeUsuario(rs.getString("nome_usuario"));
+    
+    return prova;
+}
+
+    public List<Map<String, Object>> listarProvasComRelacionamentos() throws SQLException {
+    List<Map<String, Object>> result = new ArrayList<>();
+    String sql = "SELECT p.*, q.titulo AS titulo_queixa, u.nome AS nome_usuario " +
+                 "FROM provas p " +
+                 "LEFT JOIN queixas q ON p.id_queixa = q.id_queixa " +
+                 "LEFT JOIN usuarios u ON p.id_usuario = u.id_usuario";
+    
+    try (Connection conn = Conexao.conectar();
+         PreparedStatement stmt = conn.prepareStatement(sql);
+         ResultSet rs = stmt.executeQuery()) {
+        
+        ResultSetMetaData metaData = rs.getMetaData();
+        int columnCount = metaData.getColumnCount();
+        
+        while (rs.next()) {
+            Map<String, Object> row = new HashMap<>();
+            for (int i = 1; i <= columnCount; i++) {
+                row.put(metaData.getColumnName(i), rs.getObject(i));
+            }
+            result.add(row);
+        }
+    }
+    return result;
+}
+    
+    
     public ProvaDAO() {
-        this.conexao = Conexao.conectar();
         criarDiretorioUpload();
     }
 
     private void criarDiretorioUpload() {
         File diretorio = new File(DIRETORIO_UPLOAD);
         if (!diretorio.exists()) {
-            diretorio.mkdirs();
+            if (diretorio.mkdirs()) {
+                LOGGER.info("Diretório de upload criado: " + DIRETORIO_UPLOAD);
+            } else {
+                LOGGER.warning("Falha ao criar diretório de upload: " + DIRETORIO_UPLOAD);
+            }
         }
     }
 
-    private String copiarArquivoParaUpload(String caminhoOriginal) throws IOException {
+    public String processarUpload(String caminhoOriginal) throws IOException {
         File arquivoOriginal = new File(caminhoOriginal);
         if (!arquivoOriginal.exists()) {
             throw new IOException("Arquivo não encontrado: " + caminhoOriginal);
@@ -55,81 +189,111 @@ public class ProvaDAO {
         }
         
         Files.copy(arquivoOriginal.toPath(), destino.toPath(), StandardCopyOption.REPLACE_EXISTING);
+        LOGGER.info("Arquivo copiado para: " + destino.getAbsolutePath());
         return destino.getAbsolutePath();
-    }
-
-    private String selecionarArquivoManual(Scanner scanner) {
-        System.out.println("\n--- INSTRUÇÕES PARA ARQUIVO ---");
-        System.out.println("1. Digite o caminho completo (ex: C:\\pasta\\arquivo.jpg)");
-        System.out.println("2. OU arraste o arquivo para este terminal");
-        System.out.println("0. Cancelar operação");
-        System.out.print("\nInforme o caminho ou 0 para cancelar: ");
-        
-        String caminho = scanner.nextLine().trim().replace("\"", "");
-        
-        if (caminho.equals("0")) {
-            return null;
-        }
-        
-        if (caminho.isEmpty() || caminho.matches("^\\d+$")) {
-            System.err.println("Erro: Você deve informar um caminho válido!");
-            return selecionarArquivoManual(scanner);
-        }
-        
-        try {
-            return copiarArquivoParaUpload(caminho);
-        } catch (IOException e) {
-            System.err.println("Erro: " + e.getMessage());
-            return selecionarArquivoManual(scanner);
-        }
     }
 
     private boolean existeQueixa(int idQueixa) {
         String sql = "SELECT 1 FROM queixas WHERE id_queixa = ?";
-        try (PreparedStatement stmt = conexao.prepareStatement(sql)) {
+        Connection conn = null;
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        
+        try {
+            conn = Conexao.conectar();
+            stmt = conn.prepareStatement(sql);
             stmt.setInt(1, idQueixa);
-            return stmt.executeQuery().next();
+            rs = stmt.executeQuery();
+            return rs.next();
         } catch (SQLException e) {
-            System.err.println("Erro ao verificar queixa: " + e.getMessage());
+            LOGGER.log(Level.SEVERE, "Erro ao verificar queixa", e);
             return false;
+        } finally {
+            Conexao.fecharTudo(conn, stmt, rs);
+        }
+    }
+
+    private boolean existeUsuario(int idUsuario) {
+        String sql = "SELECT 1 FROM usuarios WHERE id_usuario = ?";
+        Connection conn = null;
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        
+        try {
+            conn = Conexao.conectar();
+            stmt = conn.prepareStatement(sql);
+            stmt.setInt(1, idUsuario);
+            rs = stmt.executeQuery();
+            return rs.next();
+        } catch (SQLException e) {
+            LOGGER.log(Level.SEVERE, "Erro ao verificar usuário", e);
+            return false;
+        } finally {
+            Conexao.fecharTudo(conn, stmt, rs);
         }
     }
 
     public boolean inserir(Prova prova) {
         if (!existeQueixa(prova.getIdQueixa())) {
-            System.err.println("Erro: Queixa não encontrada!");
+            LOGGER.warning("Queixa não encontrada: " + prova.getIdQueixa());
             return false;
         }
 
-        String sql = "INSERT INTO provas (id_queixa, tipo, descricao, caminho_arquivo) VALUES (?, ?, ?, ?)";
+        if (!existeUsuario(prova.getIdUsuario())) {
+            LOGGER.warning("Usuário não encontrado: " + prova.getIdUsuario());
+            return false;
+        }
+
+        String sql = "INSERT INTO provas (id_queixa, tipo, descricao, caminho_arquivo, data_coleta, id_usuario) VALUES (?, ?, ?, ?, ?, ?)";
+        Connection conn = null;
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
         
-        try (PreparedStatement stmt = conexao.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+        try {
+            conn = Conexao.conectar();
+            stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
+            
             stmt.setInt(1, prova.getIdQueixa());
             stmt.setString(2, prova.getTipo());
             stmt.setString(3, prova.getDescricao());
             stmt.setString(4, prova.getCaminhoArquivo());
+            stmt.setTimestamp(5, prova.getDataColeta() != null ? new Timestamp(prova.getDataColeta().getTime()) : null);
+            stmt.setInt(6, prova.getIdUsuario());
             
-            if (stmt.executeUpdate() > 0) {
-                try (ResultSet rs = stmt.getGeneratedKeys()) {
-                    if (rs.next()) {
-                        prova.setIdProva(rs.getInt(1));
-                        return true;
-                    }
+            LOGGER.info("Executando inserção: " + stmt.toString());
+            
+            int affectedRows = stmt.executeUpdate();
+            
+            if (affectedRows > 0) {
+                rs = stmt.getGeneratedKeys();
+                if (rs.next()) {
+                    prova.setIdProva(rs.getInt(1));
+                    LOGGER.info("Prova inserida com sucesso. ID: " + prova.getIdProva());
+                    return true;
                 }
             }
+            LOGGER.warning("Nenhuma linha afetada na inserção");
             return false;
         } catch (SQLException e) {
-            System.err.println("Erro ao inserir prova: " + e.getMessage());
+            LOGGER.log(Level.SEVERE, "Erro ao inserir prova", e);
+            Conexao.rollback(conn);
             return false;
+        } finally {
+            Conexao.fecharTudo(conn, stmt, rs);
         }
     }
 
     public List<Prova> listarTodas() {
         List<Prova> provas = new ArrayList<>();
         String sql = "SELECT * FROM provas ORDER BY data_upload DESC";
+        Connection conn = null;
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
         
-        try (PreparedStatement stmt = conexao.prepareStatement(sql);
-             ResultSet rs = stmt.executeQuery()) {
+        try {
+            conn = Conexao.conectar();
+            stmt = conn.prepareStatement(sql);
+            rs = stmt.executeQuery();
             
             while (rs.next()) {
                 Prova p = new Prova();
@@ -138,314 +302,122 @@ public class ProvaDAO {
                 p.setTipo(rs.getString("tipo"));
                 p.setDescricao(rs.getString("descricao"));
                 p.setCaminhoArquivo(rs.getString("caminho_arquivo"));
+                p.setDataColeta(rs.getTimestamp("data_coleta"));
                 p.setDataUpload(rs.getTimestamp("data_upload"));
+                p.setIdUsuario(rs.getInt("id_usuario"));
                 provas.add(p);
             }
         } catch (SQLException e) {
-            System.err.println("Erro ao listar provas: " + e.getMessage());
+            LOGGER.log(Level.SEVERE, "Erro ao listar provas", e);
+        } finally {
+            Conexao.fecharTudo(conn, stmt, rs);
         }
         return provas;
     }
 
     public Prova buscarPorId(int id) {
         String sql = "SELECT * FROM provas WHERE id_prova = ?";
+        Connection conn = null;
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
         
-        try (PreparedStatement stmt = conexao.prepareStatement(sql)) {
+        try {
+            conn = Conexao.conectar();
+            stmt = conn.prepareStatement(sql);
             stmt.setInt(1, id);
+            rs = stmt.executeQuery();
             
-            try (ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) {
-                    Prova p = new Prova();
-                    p.setIdProva(rs.getInt("id_prova"));
-                    p.setIdQueixa(rs.getInt("id_queixa"));
-                    p.setTipo(rs.getString("tipo"));
-                    p.setDescricao(rs.getString("descricao"));
-                    p.setCaminhoArquivo(rs.getString("caminho_arquivo"));
-                    p.setDataUpload(rs.getTimestamp("data_upload"));
-                    return p;
-                }
+            if (rs.next()) {
+                Prova p = new Prova();
+                p.setIdProva(rs.getInt("id_prova"));
+                p.setIdQueixa(rs.getInt("id_queixa"));
+                p.setTipo(rs.getString("tipo"));
+                p.setDescricao(rs.getString("descricao"));
+                p.setCaminhoArquivo(rs.getString("caminho_arquivo"));
+                p.setDataColeta(rs.getTimestamp("data_coleta"));
+                p.setDataUpload(rs.getTimestamp("data_upload"));
+                p.setIdUsuario(rs.getInt("id_usuario"));
+                return p;
             }
         } catch (SQLException e) {
-            System.err.println("Erro ao buscar prova: " + e.getMessage());
+            LOGGER.log(Level.SEVERE, "Erro ao buscar prova", e);
+        } finally {
+            Conexao.fecharTudo(conn, stmt, rs);
         }
         return null;
     }
 
     public boolean atualizar(Prova prova) {
-        String sql = "UPDATE provas SET id_queixa = ?, tipo = ?, descricao = ?, caminho_arquivo = ? WHERE id_prova = ?";
+        String sql = "UPDATE provas SET id_queixa = ?, tipo = ?, descricao = ?, caminho_arquivo = ?, data_coleta = ?, id_usuario = ? WHERE id_prova = ?";
+        Connection conn = null;
+        PreparedStatement stmt = null;
         
-        try (PreparedStatement stmt = conexao.prepareStatement(sql)) {
+        try {
+            conn = Conexao.conectar();
+            stmt = conn.prepareStatement(sql);
+            
             stmt.setInt(1, prova.getIdQueixa());
             stmt.setString(2, prova.getTipo());
             stmt.setString(3, prova.getDescricao());
             stmt.setString(4, prova.getCaminhoArquivo());
-            stmt.setInt(5, prova.getIdProva());
+            stmt.setTimestamp(5, prova.getDataColeta() != null ? new Timestamp(prova.getDataColeta().getTime()) : null);
+            stmt.setInt(6, prova.getIdUsuario());
+            stmt.setInt(7, prova.getIdProva());
             
-            return stmt.executeUpdate() > 0;
-        } catch (SQLException e) {
-            System.err.println("Erro ao atualizar prova: " + e.getMessage());
+            LOGGER.info("Executando atualização: " + stmt.toString());
+            
+            int affectedRows = stmt.executeUpdate();
+            
+            if (affectedRows > 0) {
+                LOGGER.info("Prova atualizada com sucesso. ID: " + prova.getIdProva());
+                return true;
+            }
+            LOGGER.warning("Nenhuma linha afetada na atualização");
             return false;
+        } catch (SQLException e) {
+            LOGGER.log(Level.SEVERE, "Erro ao atualizar prova", e);
+            Conexao.rollback(conn);
+            return false;
+        } finally {
+            Conexao.fechar(conn, stmt);
         }
     }
 
     public boolean remover(int id) {
         Prova prova = buscarPorId(id);
-        if (prova == null) return false;
+        if (prova == null) {
+            LOGGER.warning("Prova não encontrada para remoção. ID: " + id);
+            return false;
+        }
         
         String sql = "DELETE FROM provas WHERE id_prova = ?";
+        Connection conn = null;
+        PreparedStatement stmt = null;
         
-        try (PreparedStatement stmt = conexao.prepareStatement(sql)) {
+        try {
+            conn = Conexao.conectar();
+            stmt = conn.prepareStatement(sql);
             stmt.setInt(1, id);
+            
+            LOGGER.info("Executando remoção: " + stmt.toString());
+            
             boolean sucesso = stmt.executeUpdate() > 0;
             
             if (sucesso && prova.getCaminhoArquivo() != null) {
                 try {
                     Files.deleteIfExists(new File(prova.getCaminhoArquivo()).toPath());
+                    LOGGER.info("Arquivo removido: " + prova.getCaminhoArquivo());
                 } catch (IOException e) {
-                    System.err.println("Aviso: Arquivo não pôde ser removido: " + e.getMessage());
+                    LOGGER.log(Level.WARNING, "Aviso: Arquivo não pôde ser removido", e);
                 }
             }
             return sucesso;
         } catch (SQLException e) {
-            System.err.println("Erro ao remover prova: " + e.getMessage());
+            LOGGER.log(Level.SEVERE, "Erro ao remover prova", e);
+            Conexao.rollback(conn);
             return false;
-        }
-    }
-
-    public static void main(String[] args) {
-        try (Scanner scanner = new Scanner(System.in)) {
-            ProvaDAO dao = new ProvaDAO();
-            
-            while (true) {
-                System.out.println("\n=== MENU PROVAS ===");
-                System.out.println("1. Inserir Prova");
-                System.out.println("2. Listar Todas");
-                System.out.println("3. Buscar por ID");
-                System.out.println("4. Atualizar");
-                System.out.println("5. Remover");
-                System.out.println("0. Sair");
-                System.out.print("Opção: ");
-                
-                try {
-                    int opcao = scanner.nextInt();
-                    scanner.nextLine();
-                    
-                    switch (opcao) {
-                        case 1:
-                            inserirProva(dao, scanner);
-                            break;
-                        case 2:
-                            listarProvas(dao);
-                            break;
-                        case 3:
-                            buscarProva(dao, scanner);
-                            break;
-                        case 4:
-                            atualizarProva(dao, scanner);
-                            break;
-                        case 5:
-                            removerProva(dao, scanner);
-                            break;
-                        case 0:
-                            System.out.println("Saindo do sistema...");
-                            return;
-                        default:
-                            System.out.println("Opção inválida!");
-                    }
-                } catch (Exception e) {
-                    System.out.println("Erro: " + e.getMessage());
-                    scanner.nextLine();
-                }
-            }
-        }
-    }
-
-    private static void inserirProva(ProvaDAO dao, Scanner scanner) {
-        System.out.println("\n--- NOVA PROVA ---");
-        
-        try {
-            System.out.print("ID da Queixa: ");
-            int idQueixa = scanner.nextInt();
-            scanner.nextLine();
-            
-            System.out.println("Tipo da Prova:");
-            System.out.println("1. Imagem");
-            System.out.println("2. Vídeo");
-            System.out.println("3. Documento");
-            System.out.println("4. Áudio");
-            System.out.print("Escolha (1-4): ");
-            int tipoOpcao = scanner.nextInt();
-            scanner.nextLine();
-            
-            String tipo;
-            switch (tipoOpcao) {
-                case 1: tipo = "Imagem"; break;
-                case 2: tipo = "Vídeo"; break;
-                case 3: tipo = "Documento"; break;
-                case 4: tipo = "Áudio"; break;
-                default: 
-                    System.out.println("Opção inválida! Usando 'Imagem' como padrão.");
-                    tipo = "Imagem";
-            }
-            
-            System.out.print("Descrição: ");
-            String descricao = scanner.nextLine();
-            
-            String caminhoArquivo = dao.selecionarArquivoManual(scanner);
-            if (caminhoArquivo == null) {
-                System.out.println("Operação cancelada pelo usuário.");
-                return;
-            }
-            
-            Prova nova = new Prova();
-            nova.setIdQueixa(idQueixa);
-            nova.setTipo(tipo);
-            nova.setDescricao(descricao);
-            nova.setCaminhoArquivo(caminhoArquivo);
-            
-            if (dao.inserir(nova)) {
-                System.out.println("Prova cadastrada com sucesso! ID: " + nova.getIdProva());
-            } else {
-                System.out.println("Falha ao cadastrar prova.");
-            }
-        } catch (Exception e) {
-            System.out.println("Erro: " + e.getMessage());
-        }
-    }
-
-    private static void listarProvas(ProvaDAO dao) {
-        System.out.println("\n--- LISTA DE PROVAS ---");
-        List<Prova> provas = dao.listarTodas();
-        
-        if (provas.isEmpty()) {
-            System.out.println("Nenhuma prova cadastrada.");
-            return;
-        }
-        
-        System.out.printf("%-5s %-10s %-15s %-30s %-20s%n", 
-            "ID", "Queixa", "Tipo", "Descrição", "Data Upload");
-        System.out.println("------------------------------------------------------------");
-        
-        for (Prova p : provas) {
-            String descricao = p.getDescricao() != null && p.getDescricao().length() > 25 ? 
-                p.getDescricao().substring(0, 25) + "..." : p.getDescricao();
-            String arquivo = p.getCaminhoArquivo() != null ? 
-                p.getCaminhoArquivo().substring(p.getCaminhoArquivo().lastIndexOf("\\") + 1) : "Nenhum";
-            
-            System.out.printf("%-5d %-10d %-15s %-30s %-20s%n",
-                p.getIdProva(),
-                p.getIdQueixa(),
-                p.getTipo(),
-                descricao != null ? descricao : "",
-                new java.text.SimpleDateFormat("dd/MM/yyyy").format(p.getDataUpload()));
-        }
-    }
-
-    private static void buscarProva(ProvaDAO dao, Scanner scanner) {
-        System.out.println("\n--- BUSCAR PROVA ---");
-        System.out.print("ID da Prova: ");
-        int id = scanner.nextInt();
-        scanner.nextLine();
-        
-        Prova p = dao.buscarPorId(id);
-        if (p != null) {
-            System.out.println("\nDetalhes da Prova:");
-            System.out.println("ID: " + p.getIdProva());
-            System.out.println("ID Queixa: " + p.getIdQueixa());
-            System.out.println("Tipo: " + p.getTipo());
-            System.out.println("Descrição: " + p.getDescricao());
-            System.out.println("Arquivo: " + p.getCaminhoArquivo());
-            System.out.println("Data Upload: " + 
-                new java.text.SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(p.getDataUpload()));
-        } else {
-            System.out.println("Prova não encontrada!");
-        }
-    }
-
-    private static void atualizarProva(ProvaDAO dao, Scanner scanner) {
-        System.out.println("\n--- ATUALIZAR PROVA ---");
-        System.out.print("ID da Prova: ");
-        int id = scanner.nextInt();
-        scanner.nextLine();
-        
-        Prova p = dao.buscarPorId(id);
-        if (p == null) {
-            System.out.println("Prova não encontrada!");
-            return;
-        }
-        
-        System.out.println("\nDados atuais:");
-        System.out.println(p);
-        
-        System.out.print("\nNovo ID da Queixa (" + p.getIdQueixa() + "): ");
-        p.setIdQueixa(scanner.nextInt());
-        scanner.nextLine();
-        
-        System.out.println("Novo Tipo:");
-        System.out.println("1. Imagem");
-        System.out.println("2. Vídeo");
-        System.out.println("3. Documento");
-        System.out.println("4. Áudio");
-        System.out.print("Escolha (1-4, 0 para manter atual): ");
-        int tipoOpcao = scanner.nextInt();
-        scanner.nextLine();
-        
-        if (tipoOpcao > 0) {
-            switch (tipoOpcao) {
-                case 1: p.setTipo("Imagem"); break;
-                case 2: p.setTipo("Vídeo"); break;
-                case 3: p.setTipo("Documento"); break;
-                case 4: p.setTipo("Áudio"); break;
-                default: System.out.println("Opção inválida! Mantendo tipo atual.");
-            }
-        }
-        
-        System.out.print("Nova Descrição (" + p.getDescricao() + "): ");
-        String novaDescricao = scanner.nextLine();
-        if (!novaDescricao.isEmpty()) {
-            p.setDescricao(novaDescricao);
-        }
-        
-        System.out.print("Deseja alterar o arquivo? (S/N): ");
-        if (scanner.nextLine().equalsIgnoreCase("S")) {
-            System.out.println("Informe o novo arquivo:");
-            String novoArquivo = dao.selecionarArquivoManual(scanner);
-            if (novoArquivo != null) {
-                p.setCaminhoArquivo(novoArquivo);
-            }
-        }
-        
-        if (dao.atualizar(p)) {
-            System.out.println("Prova atualizada com sucesso!");
-        } else {
-            System.out.println("Falha ao atualizar prova!");
-        }
-    }
-
-    private static void removerProva(ProvaDAO dao, Scanner scanner) {
-        System.out.println("\n--- REMOVER PROVA ---");
-        System.out.print("ID da Prova: ");
-        int id = scanner.nextInt();
-        scanner.nextLine();
-        
-        Prova p = dao.buscarPorId(id);
-        if (p == null) {
-            System.out.println("Prova não encontrada!");
-            return;
-        }
-        
-        System.out.println("\nDados da prova a ser removida:");
-        System.out.println(p);
-        
-        System.out.print("Tem certeza que deseja remover esta prova? (S/N): ");
-        if (scanner.nextLine().equalsIgnoreCase("S")) {
-            if (dao.remover(id)) {
-                System.out.println("Prova removida com sucesso!");
-            } else {
-                System.out.println("Falha ao remover prova!");
-            }
-        } else {
-            System.out.println("Operação cancelada.");
+        } finally {
+            Conexao.fechar(conn, stmt);
         }
     }
 }

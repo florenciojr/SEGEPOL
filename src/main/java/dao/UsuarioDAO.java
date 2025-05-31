@@ -16,6 +16,8 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 import model.Usuario;
 import util.Conexao;
 
@@ -522,6 +524,42 @@ public boolean desativarUsuario(int id) {
         }
     }
     
+   public List<Map<String, Object>> listarUsuariosParaCombo() throws SQLException {
+    String sql = "SELECT id_usuario, nome FROM usuarios ORDER BY nome";
+    List<Map<String, Object>> usuarios = new ArrayList<>();
     
+    try (Connection conn = Conexao.conectar();
+         PreparedStatement stmt = conn.prepareStatement(sql);
+         ResultSet rs = stmt.executeQuery()) {
+        
+        while (rs.next()) {
+            Map<String, Object> usuario = new HashMap<>();
+            usuario.put("id", rs.getInt("id_usuario"));
+            usuario.put("nome", rs.getString("nome"));
+            usuarios.add(usuario);
+        }
+    }
+    return usuarios;
+} 
+   
+   
+   
+   public List<Usuario> listarUsuariosRecentes() throws SQLException {
+    List<Usuario> usuarios = new ArrayList<>();
+    String sql = "SELECT id_usuario, nome FROM usuarios ORDER BY data_cadastro DESC LIMIT 20";
+    
+    try (Connection conn = Conexao.conectar();
+         PreparedStatement stmt = conn.prepareStatement(sql);
+         ResultSet rs = stmt.executeQuery()) {
+        
+        while (rs.next()) {
+            Usuario usuario = new Usuario();
+            usuario.setId_usuario(rs.getInt("id_usuario"));
+            usuario.setNome(rs.getString("nome"));
+            usuarios.add(usuario);
+        }
+    }
+    return usuarios;
+}
     
 }

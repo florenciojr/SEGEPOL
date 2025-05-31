@@ -9,21 +9,25 @@ package model;
  * @author JR5
  */
 
+
+
 import java.util.Date;
 
 public class Prova {
     private int idProva;
     private int idQueixa;
-    private String tipo; // Valores permitidos: "Imagem", "Vídeo", "Documento", "Áudio"
+    private String tipo; // Valores permitidos: "Imagem", "Vídeo", "Documento", "Áudio", "Objeto", "Digital"
     private String descricao;
     private String caminhoArquivo;
+    private Date dataColeta;
     private Date dataUpload;
+    private int idUsuario;
 
     public Prova() {
         this.dataUpload = new Date();
     }
 
-    // Getters e Setters com validação
+    // Getters e Setters
     public int getIdProva() {
         return idProva;
     }
@@ -46,8 +50,9 @@ public class Prova {
 
     public void setTipo(String tipo) {
         if (tipo == null || (!tipo.equals("Imagem") && !tipo.equals("Vídeo") && 
-            !tipo.equals("Documento") && !tipo.equals("Áudio"))) {
-            throw new IllegalArgumentException("Tipo de prova inválido. Valores permitidos: Imagem, Vídeo, Documento, Áudio");
+            !tipo.equals("Documento") && !tipo.equals("Áudio") && 
+            !tipo.equals("Objeto") && !tipo.equals("Digital"))) {
+            throw new IllegalArgumentException("Tipo de prova inválido. Valores permitidos: Imagem, Vídeo, Documento, Áudio, Objeto, Digital");
         }
         this.tipo = tipo;
     }
@@ -68,6 +73,14 @@ public class Prova {
         this.caminhoArquivo = caminhoArquivo;
     }
 
+    public Date getDataColeta() {
+        return dataColeta;
+    }
+
+    public void setDataColeta(Date dataColeta) {
+        this.dataColeta = dataColeta;
+    }
+
     public Date getDataUpload() {
         return dataUpload;
     }
@@ -76,11 +89,21 @@ public class Prova {
         this.dataUpload = dataUpload;
     }
 
+    public int getIdUsuario() {
+        return idUsuario;
+    }
+
+    public void setIdUsuario(int idUsuario) {
+        this.idUsuario = idUsuario;
+    }
+
     @Override
     public String toString() {
-        return String.format("Prova [ID=%d, Queixa=%d, Tipo=%s, Arquivo=%s, Data=%s]",
+        return String.format("Prova [ID=%d, Queixa=%d, Tipo=%s, Arquivo=%s, Coleta=%s, Upload=%s, Usuário=%d]",
                 idProva, idQueixa, tipo, 
                 caminhoArquivo != null ? caminhoArquivo.substring(caminhoArquivo.lastIndexOf("\\") + 1) : "Nenhum",
-                new java.text.SimpleDateFormat("dd/MM/yyyy HH:mm").format(dataUpload));
+                dataColeta != null ? new java.text.SimpleDateFormat("dd/MM/yyyy HH:mm").format(dataColeta) : "Não informada",
+                new java.text.SimpleDateFormat("dd/MM/yyyy HH:mm").format(dataUpload),
+                idUsuario);
     }
 }

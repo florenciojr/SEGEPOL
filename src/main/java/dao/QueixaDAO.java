@@ -16,6 +16,7 @@ import java.nio.charset.Charset;
 import java.sql.*;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -428,4 +429,27 @@ public Queixa buscarQueixaPorId(int id) throws SQLException {
     }
     return null;
 }
+ 
+ 
+ public List<Map<String, Object>> listarQueixasParaCombo() throws SQLException {
+    String sql = "SELECT id_queixa, titulo FROM queixas ORDER BY titulo";
+    List<Map<String, Object>> queixas = new ArrayList<>();
+    
+    try (Connection conn = Conexao.conectar();
+         PreparedStatement stmt = conn.prepareStatement(sql);
+         ResultSet rs = stmt.executeQuery()) {
+        
+        while (rs.next()) {
+            Map<String, Object> queixa = new HashMap<>();
+            queixa.put("id", rs.getInt("id_queixa"));
+            queixa.put("titulo", rs.getString("titulo"));
+            queixas.add(queixa);
+        }
+    }
+    return queixas;
+}
+ 
+ 
+ 
+ 
 }
